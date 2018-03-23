@@ -128,7 +128,6 @@
 ; TESTS.
 
 (deftest ??valid-locale
- (prn (remove valid-locale? (keys i18n.data/locales)))
  (are [l] (valid-locale? l)
   "en"
   "en-GB"
@@ -145,7 +144,9 @@
   "En-Gb"
   "en, fr;q=0.5"
   ["en" "fr"]
-  :default))
+  :default)
+
+ (is (= [:default] (remove valid-locale? (keys i18n.data/locales)))))
 
 (deftest ??fix-locale
  (are [l e] (= e (fix-locale l))

@@ -222,9 +222,9 @@
         :code "gl"}
 
   ; Swiss German
-  "gsw" {:number-format-symbols goog.i18n.NumberFormatSymbols_gsw}
-        :date-time-symbols goog.i18n.DateTimeSymbols_gsw
-        :code "gsw"
+  "gsw" {:number-format-symbols goog.i18n.NumberFormatSymbols_gsw
+         :date-time-symbols goog.i18n.DateTimeSymbols_gsw
+         :code "gsw"}
 
   ; Gujarati
   "gu" {:number-format-symbols goog.i18n.NumberFormatSymbols_gu
