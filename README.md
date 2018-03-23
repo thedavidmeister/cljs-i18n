@@ -136,6 +136,8 @@ The public API consists of 2 fns:
 Both take a number/string to be formatted/parsed as the first arg and optional
 k/v pairs for other options.
 
+See `i18n.number` tests for examples of both.
+
 ### Shared options
 
 `:locale`
@@ -156,11 +158,20 @@ Example patterns:
 
 https://github.com/google/closure-library/blob/master/closure/goog/i18n/numberformatsymbols.js
 
-### Format options
+### Parsing
+
+You should not typically need to set a pattern manually for `parse`, `:locale`
+alone should be sufficient.
+
+```clojure
+(parse "1,000,000") ; 1000000
+(parse "10,00,000") ; 1000000
+(parse "1,000,000" :locale "gl") ; 1
+```
+
+### Formatting
 
 Format has a few extra options not available to parse.
-
-See `i18n.number` tests for more examples.
 
 `:min-fraction-digits`
 
