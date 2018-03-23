@@ -4,6 +4,11 @@
   i18n.locale
   [cljs.test :refer-macros [deftest is]]))
 
+; PRIVATE API. DO NOT CALL THIS EXTERNALLY. IT IS FAR TOO EASY TO SCREW THIS UP.
+; This is the guts of the smoke and mirrors needed to make the mutable, single
+; locale OO goog system look like a functional, multi-locale system from the
+; public API fns.
+
 (defn locale->symbols-fn
  ([k] (locale->symbols-fn k i18n.data/locales))
  ([k locales]
