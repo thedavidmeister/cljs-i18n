@@ -13,9 +13,8 @@
   i18n.goog
   [cljs.test :refer-macros [deftest is are]]
   taoensso.timbre
-  i18n.locale))
-  ; wheel.math.number
-  ; [javelin.core :as j]))
+  i18n.locale
+  i18n.data))
 
 ; Limits displayed digits after the decimal point.
 (def default-max-fraction-digits 1)
@@ -23,11 +22,18 @@
 (def default-trailing-zeros false)
 
 ; When passed nil instead of a number, what string to return?
-(def nil-string "")
+(def default-nil-string "")
 ; When passed NaN instead of a number, what string to return?
-(def NaN-string "-")
+(def default-nan-string "-")
 
 ; PRIVATE API. DO NOT CALL THIS EXTERNALLY. IT IS FAR TOO EASY TO SCREW THIS UP.
+
+(defn nan?
+ [n]
+ ; http://adripofjavascript.com/blog/drips/the-problem-with-testing-for-nan-in-javascript.html
+ (if (number? n)
+  (not (== n n))
+  false))
 
 (def formats
  {:decimal (.-DECIMAL goog.i18n.NumberFormat.Format)
@@ -69,14 +75,18 @@
               pattern
               min-fraction-digits
               max-fraction-digits
-              trailing-zeros?]}]
- {:pre [(or (nil? n) (number? n)) ; (wheel.math.number/nan? n))
+              trailing-zeros?
+              nil-string
+              nan-string]}]
+ {:pre [(or (nil? n) (number? n))
         (or (nil? locale) (string? locale))]
   :post [(string? %)]}
- (let [locale (or locale @i18n.locale/supported-user-locale)]
+ (let [locale (or locale (-> i18n.data/locales :default :code))
+       nil-string (or nil-string default-nil-string)
+       nan-string (or nan-string default-nan-string)]
   (cond
    (nil? n) nil-string
-   ; (wheel.math.number/nan? n) NaN-string
+   (nan? n) nan-string
    :else
    (do
     (i18n.goog/set-locale! locale)
@@ -89,33 +99,17 @@
      n)))))
 (def format (memoize -format))
 
-; (defn format-cell
-;  [n & {:keys [locale] :as opts}]
-;  (j/cell=
-;   (apply
-;    (partial format n)
-;    (flatten
-;     (seq
-;      (merge
-;       opts
-;       {:locale (or locale i18n.locale/supported-user-locale)}))))))
-
 (defn -parse
  [s & {:keys [locale pattern]}]
  {:pre [(string? s) (or (nil? locale) (string? locale))]
   :post [(number? %)]}
- (let [locale (or locale @i18n.locale/supported-user-locale)]
+ (let [locale (or locale (-> i18n.data/locales :default :code))]
   (i18n.goog/set-locale! locale)
   (.parse
    ((parser)
     (or pattern default-pattern))
    s)))
 (def parse (memoize -parse))
-
-; (defn parse-cell
-;  [s & {:keys [pattern locale]}]
-;  (let [locale (or locale i18n.locale/supported-user-locale)]
-;   (j/cell= (parse s :locale locale :pattern pattern))))
 
 ; TESTS.
 
