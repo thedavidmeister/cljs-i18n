@@ -18,7 +18,7 @@
   "am" {:number-format-symbols goog.i18n.NumberFormatSymbols_am
         :date-time-symbols goog.i18n.DateTimeSymbols_am}
 
-  ; 	Arabic
+  ; Arabic
   "ar" {:number-format-symbols goog.i18n.NumberFormatSymbols_ar
         :date-time-symbols goog.i18n.DateTimeSymbols_ar}
 
