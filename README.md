@@ -2,6 +2,8 @@
 
 ## Install
 
+[![CircleCI](https://circleci.com/gh/thedavidmeister/cljs-i18n/tree/master.svg?style=svg)](https://circleci.com/gh/thedavidmeister/cljs-i18n/tree/master)
+
 [![Clojars Project](https://img.shields.io/clojars/v/thedavidmeister/cljs-i18n.svg)](https://clojars.org/thedavidmeister/cljs-i18n)
 
 ## Overview
