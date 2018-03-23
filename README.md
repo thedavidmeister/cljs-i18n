@@ -26,7 +26,7 @@ Takes a string or seq and returns the best match from supported locales.
 
 Takes an `Accept-Language` header string and converts to a seq of locales.
 
-`i18n.locale/system-locale`
+`i18n.locale/system-locales`
 
 Attempts to detect the user's preferred locale from the browser or OS.
 
@@ -266,9 +266,13 @@ module.exports = function(context, cb) {
 Make sure to save any fetched headers in local/session storage to avoid spamming
 round trips to the server for redundant locale information.
 
-`i18n.locale/system-locale`
+`i18n.locale/system-locales`
 
 Attempts to detect the user's preferred locale from the browser or OS.
+
+This is entirely different from and less reliable than `Accept-Language`
+discussed above, but has the advantage of being available in the browser without
+a server round-trip.
 
 Runs through the various options documented at:
 

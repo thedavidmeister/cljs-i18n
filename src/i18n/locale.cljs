@@ -123,7 +123,7 @@
     ; fallback to default
     i18n.data/default-locale))))
 
-(defn system-locale
+(defn system-locales
  []
  {:post [(or (nil? %) (coll? %))]}
  (let [navigator (.-navigator js/window)]
