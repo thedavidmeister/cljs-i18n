@@ -4,6 +4,11 @@
   i18n.locale
   [cljs.test :refer-macros [deftest is]]))
 
+; PRIVATE API. DO NOT CALL THIS EXTERNALLY. IT IS FAR TOO EASY TO SCREW THIS UP.
+; This is the guts of the smoke and mirrors needed to make the mutable, single
+; locale OO goog system look like a functional, multi-locale system from the
+; public API fns.
+
 (defn locale->symbols-fn
  ([k] (locale->symbols-fn k i18n.data/locales))
  ([k locales]
@@ -40,34 +45,34 @@
 
 ; TESTS.
 
-; (deftest ??set-locale
-;  (let [c (j/cell "")
-;        f #(swap! c str %)
-;        g #(swap! c str %)]
-;   ; Without any registered callbacks, c should remain the same.
-;   (set-locale! "en")
-;   (is (== "" @c))
-;
-;   ; When f is registered, c should increase by 1.
-;   (register-locale-cb! f)
-;   (set-locale! "en-AU")
-;   (is (== "en-AU" @c))
-;
-;   ; Registering f a second time should do nothing.
-;   (register-locale-cb! f)
-;   (set-locale! "en-GB")
-;   (is (== "en-AUen-GB" @c))
-;
-;   ; Registering g should cause both f and g to execute.
-;   (register-locale-cb! g)
-;   (set-locale! "en-IN")
-;   (is (== "en-AUen-GBen-INen-IN" @c))
-;
-;   ; We should be able to deregister both f and g.
-;   (deregister-locale-cb! f)
-;   (deregister-locale-cb! g)
-;   (set-locale! "en-US")
-;   (is (== "en-AUen-GBen-INen-IN" @c))))
+(deftest ??set-locale
+ (let [c (atom "")
+       f #(swap! c str %)
+       g #(swap! c str %)]
+  ; Without any registered callbacks, c should remain the same.
+  (set-locale! "en")
+  (is (== "" @c))
+
+  ; When f is registered, c should increase by 1.
+  (register-locale-cb! f)
+  (set-locale! "en-AU")
+  (is (== "en-AU" @c))
+
+  ; Registering f a second time should do nothing.
+  (register-locale-cb! f)
+  (set-locale! "en-GB")
+  (is (== "en-AUen-GB" @c))
+
+  ; Registering g should cause both f and g to execute.
+  (register-locale-cb! g)
+  (set-locale! "en-IN")
+  (is (== "en-AUen-GBen-INen-IN" @c))
+
+  ; We should be able to deregister both f and g.
+  (deregister-locale-cb! f)
+  (deregister-locale-cb! g)
+  (set-locale! "en-US")
+  (is (== "en-AUen-GBen-INen-IN" @c))))
 
 (deftest ??locale->symbols-fn
  (let [en :en
