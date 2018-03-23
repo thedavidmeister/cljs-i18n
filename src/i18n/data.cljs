@@ -163,8 +163,8 @@
 
   ; Spanish - Spain
   "es-ES" {:number-format-symbols goog.i18n.NumberFormatSymbols_es_ES
-            :date-time-symbols goog.i18n.DateTimeSymbols_es_ES
-            :code "es-ES"}
+           :date-time-symbols goog.i18n.DateTimeSymbols_es_ES
+           :code "es-ES"}
 
   ; Spanish - Mexico
   "es-MX" {:number-format-symbols goog.i18n.NumberFormatSymbols_es_MX
@@ -222,9 +222,9 @@
         :code "gl"}
 
   ; Swiss German
-  "gsw" {:number-format-symbols goog.i18n.NumberFormatSymbols_gsw}
-        :date-time-symbols goog.i18n.DateTimeSymbols_gsw
-        :code "gsw"
+  "gsw" {:number-format-symbols goog.i18n.NumberFormatSymbols_gsw
+         :date-time-symbols goog.i18n.DateTimeSymbols_gsw
+         :code "gsw"}
 
   ; Gujarati
   "gu" {:number-format-symbols goog.i18n.NumberFormatSymbols_gu
@@ -560,3 +560,5 @@
   "zu" {:number-format-symbols goog.i18n.NumberFormatSymbols_zu
         :date-time-symbols goog.i18n.DateTimeSymbols_zu
         :code "zu"}})
+
+(def default-locale (-> locales :default :code))

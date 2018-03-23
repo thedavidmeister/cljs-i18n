@@ -12,11 +12,11 @@
 
 `i18n.locale/valid-locale?`
 
-Takes a string and returns `true` if it looks like an ISO locale.
+Takes a string and returns `true` if it looks like a locale we might support.
 
 `i18n.locale/fix-locale`
 
-Takes a string and attempts to hammer it into an ISO locale.
+Takes an invalid locale string and attempts to hammer it into an ISO locale.
 
 `i18n.locale/supported-locale`
 
@@ -26,7 +26,7 @@ Takes a string or seq and returns the best match from supported locales.
 
 Takes an `Accept-Language` header string and converts to a seq of locales.
 
-`i18n.locale/browser-locale`
+`i18n.locale/system-locale`
 
 Attempts to detect the user's preferred locale from the browser or OS.
 
@@ -121,8 +121,8 @@ Additionally this lib provides several things `goog.i18n` is missing that we
 need in order to work with an end-user's locale in the browser:
 
 - Extracting the user's preferred locale based on OS/browser/config settings
-- Normalizing langcodes format (e.g. `en_US` to `en-US`)
-- Extracting a supported langcode from `Accept-Language` HTTP headers
+- Normalizing locale's format (e.g. `en_US` to `en-US`)
+- Extracting a supported locale from `Accept-Language` HTTP headers
 
 ## Supported locales
 
@@ -150,7 +150,7 @@ to put a pull request up for inclusion.
 
 ## Accepted locale code formats
 
-Ideally pass in locales as ISO styles strings.
+Ideally pass in locales to `:locale` params as ISO styles strings.
 
 i.e. `<lowercase language code>-<uppercase country code>`.
 
@@ -165,22 +165,118 @@ In the wild, locales are also often represented:
 - as a sequence of options, e.g. `["en-US" "en"]`
 - an [`Accept-Language` header](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Accept-Language), e.g. `"fr-CH, fr;q=0.9, en;q=0.8, de;q=0.7, *;q=0.5"`
 
-Any public API function that accepts a locale as an argument will normalize the
-locale as per `i18n.locale/normalize-locale`. The basic logic is to select the
-first supported locale in a sequence/accept string then fix the casing and
-delimiter.
+Any public API function that accepts a locale as an argument will normalize to a
+supported locale as per `i18n.locale/supported-locale`. The basic logic is to
+select the first supported locale in a sequence/accept string by fixing the
+casing and delimiter if possible as per `i18n.locale/fix-locale`.
 
 If a locale is not supported (see above) then:
 
 - The next supported locale in the sequence will be used
 - If no locale in a sequence is supported, the default locale will be used
 - If the locale is singular then the default locale will be used instead
-- If the locale is corrupt and cannot be parsed at all an error will be logged
-  via `taoensso.timbre/error` and the default locale used instead
+- If the locale is corrupt and cannot be parsed at all a warning will be logged
+  via `taoensso.timbre/warn` and the default locale used instead
 
 The default locale (at the time of writing) is set by Google as `"en"`.
 
-## Number format and parse
+## i18n.locale - Working with locales
+
+`i18n.locale/valid-locale?`
+
+Takes a string and returns `true` if it looks like a locale we might support.
+
+Only singular locale strings are valid, no sequences or headers will validate.
+
+Typically to be valid a string must:
+
+- Have a lowercase langcode
+- Have no country code, or an uppercase country code
+- Be delimited by `-`
+
+But there are exceptions if the locale string is a key in `i18n.data/locales`.
+
+Notably `"sr-Latn"` and `"es-419"` are considered valid locales.
+
+Keyword locales like `:default` that are found in `i18n.data/locales` are NOT
+considered valid.
+
+`i18n.locale/fix-locale`
+
+Takes an invalid locale string and attempts to hammer it into an ISO locale.
+
+Can fix:
+
+- Invalid case
+- Delimited by `_`
+
+Is aware of `valid-locale?` edge cases like `"sr-Latn"` (see above).
+
+`i18n.locale/supported-locale`
+
+Takes a string or seq and returns the best match from supported locales.
+
+Supports both `Accept-Language` header and singular locale strings (see below).
+
+Sequences of locales are supported.
+
+Nested structures are NOT supported.
+
+Tries pretty hard to find a match for each candidate locale:
+
+- `nil` falls back to default locale
+- Sequences and accept headers are processed in order
+- Munged locales are fixed as per `fix-locale` (see above)
+- First match against supported locales is returned
+- If there are no matches, country codes are stripped for a second pass
+- If there are no matches after two passes, falls back to default locale
+
+`i18n.locale/accept-language->locales`
+
+Takes an `Accept-Language` header string and converts to a seq of locales.
+
+Parses the string according to the rules documented at:
+
+https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Accept-Language
+
+The output sequence is ordered by "quality" scores from the header string.
+
+This header contains the most detailed, reliable and relevant user configuration
+available in the browser, provided you can actually get at it.
+
+As far as I know, there is no way to get at an `Accept-Language` header with raw
+JavaScript. Based on my testing and research both the `XMLHttpRequest()` and
+`fetch()` APIs won't make this header available for inspection.
+
+The only way to get at this header is to read a request from the server and
+return the header string in the server response.
+
+If you don't have a server, this snippet will return `Accept-Language` strings
+from any request to a free tier endpoint from [Webtask IO](https://webtask.io/):
+
+```javascript
+/**
+* @param context {WebtaskContext}
+*/
+module.exports = function(context, cb) {
+  cb(null, context.headers['accept-language'] || context.headers['Accept-Language']);
+};
+```
+
+Make sure to save any fetched headers in local/session storage to avoid spamming
+round trips to the server for redundant locale information.
+
+`i18n.locale/system-locale`
+
+Attempts to detect the user's preferred locale from the browser or OS.
+
+Runs through the various options documented at:
+
+https://zzz.buzz/2016/01/13/detect-browser-language-in-javascript/
+
+Normalizes the return values to a sequence of locales or `nil`.
+
+## i18n.number - Number format and parse
 
 Both formatting and parsing of numbers is supported in `i18n.number`.
 

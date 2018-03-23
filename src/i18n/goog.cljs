@@ -14,7 +14,7 @@
  ([k locales]
   {:pre [(keyword? k)]}
   (fn [locale]
-   (k (get locales (i18n.locale/normalize-locale locale) (:default locales))))))
+   (k (get locales (i18n.locale/supported-locale locale) (:default locales))))))
 
 (defn format-or-pattern->pattern
  [formats format-or-pattern]
@@ -37,7 +37,7 @@
   (swap! fs disj f))
 
  (defn set-locale! [locale]
-  (let [locale (i18n.locale/normalize-locale locale)]
+  (let [locale (i18n.locale/supported-locale locale)]
    (when-not (= @current-locale locale)
     (doseq [f @fs]
      (f locale))
@@ -81,7 +81,8 @@
            :default {:foo d}}
        f (locale->symbols-fn :foo ls)]
   (is (identical? en (f "en")))
-  (is (identical? d (f "asdf")))))
+  ; falls back to en as it is the default
+  (is (identical? en (f "asdf")))))
 
 (deftest ??format-or-pattern->pattern
  (let [fs #{:foo :bar}]
