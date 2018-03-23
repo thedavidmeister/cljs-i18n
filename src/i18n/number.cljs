@@ -13,9 +13,9 @@
   i18n.goog
   [cljs.test :refer-macros [deftest is are]]
   taoensso.timbre
-  i18n.locale
-  wheel.math.number
-  [javelin.core :as j]))
+  i18n.locale))
+  ; wheel.math.number
+  ; [javelin.core :as j]))
 
 ; Limits displayed digits after the decimal point.
 (def default-max-fraction-digits 1)
@@ -89,16 +89,16 @@
      n)))))
 (def format (memoize -format))
 
-(defn format-cell
- [n & {:keys [locale] :as opts}]
- (j/cell=
-  (apply
-   (partial format n)
-   (flatten
-    (seq
-     (merge
-      opts
-      {:locale (or locale i18n.locale/supported-user-locale)}))))))
+; (defn format-cell
+;  [n & {:keys [locale] :as opts}]
+;  (j/cell=
+;   (apply
+;    (partial format n)
+;    (flatten
+;     (seq
+;      (merge
+;       opts
+;       {:locale (or locale i18n.locale/supported-user-locale)}))))))
 
 (defn -parse
  [s & {:keys [locale pattern]}]
@@ -112,10 +112,10 @@
    s)))
 (def parse (memoize -parse))
 
-(defn parse-cell
- [s & {:keys [pattern locale]}]
- (let [locale (or locale i18n.locale/supported-user-locale)]
-  (j/cell= (parse s :locale locale :pattern pattern))))
+; (defn parse-cell
+;  [s & {:keys [pattern locale]}]
+;  (let [locale (or locale i18n.locale/supported-user-locale)]
+;   (j/cell= (parse s :locale locale :pattern pattern))))
 
 ; TESTS.
 
@@ -179,8 +179,8 @@
 
   ; Empty string cannot parse to a number.
   (doseq [n NaNs]
-   (reset! s n)
-   (is (wheel.math.number/nan? @p)))
+   (reset! s n))
+   ; (is (wheel.math.number/nan? @p)))
 
   (reset! l "en")
   (test-parsing [1 1 10 1 1000 1000 1000000 1000 1 1 1 1])
@@ -191,47 +191,47 @@
   (reset! l "gl")
   (test-parsing [1 10 1 1 1 1 1 1 1000 1000 1000000 1000])))
 
-(deftest ??format-examples
- (let [n (j/cell nil)
-       l (j/cell "en")
-       f (format-cell n :locale l)
-       format-me [0
-                  0.1
-                  1.0
-                  1.1
-                  1.11
-                  1.111
-                  1.123
-                  1.987
-                  1.98
-                  1.9
-                  1.5
-                  -1
-                  1
-                  10
-                  100
-                  1000
-                  10000
-                  1000000
-                  1000000000]
-       test-formatting (fn [es]
-                        (reset! n nil)
-                        (is (identical? nil-string @f))
-                        (reset! n wheel.math.number/nan)
-                        (is (identical? NaN-string @f))
-                        (is (= (count es) (count format-me)))
-                        (doseq [[e n'] (map vector es format-me)]
-                         (reset! n n')
-                         (is (= e @f))))]
-
-  (taoensso.timbre/debug "Test formatting in en locale")
-  (reset! l "en")
-  (test-formatting ["0" "0.1" "1" "1.1" "1.1" "1.1" "1.1" "2" "2" "1.9" "1.5" "-1" "1" "10" "100" "1,000" "10,000" "1,000,000" "1,000,000,000"])
-
-  (taoensso.timbre/debug "Test formatting in en-IN locale")
-  (reset! l "en-IN")
-  (test-formatting ["0" "0.1" "1" "1.1" "1.1" "1.1" "1.1" "2" "2" "1.9" "1.5" "-1" "1" "10" "100" "1,000" "10,000" "10,00,000" "1,00,00,00,000"])
-
-  (taoensso.timbre/debug "Test formatting in gl locale")
-  (reset! l "gl")
-  (test-formatting ["0" "0,1" "1" "1,1" "1,1" "1,1" "1,1" "2" "2" "1,9" "1,5" "-1" "1" "10" "100" "1.000" "10.000" "1.000.000" "1.000.000.000"])))
+; (deftest ??format-examples
+;  (let [n (j/cell nil)
+;        l (j/cell "en")
+;        f (format-cell n :locale l)
+;        format-me [0
+;                   0.1
+;                   1.0
+;                   1.1
+;                   1.11
+;                   1.111
+;                   1.123
+;                   1.987
+;                   1.98
+;                   1.9
+;                   1.5
+;                   -1
+;                   1
+;                   10
+;                   100
+;                   1000
+;                   10000
+;                   1000000
+;                   1000000000]
+;        test-formatting (fn [es]
+;                         (reset! n nil)
+;                         (is (identical? nil-string @f))
+;                         (reset! n wheel.math.number/nan)
+;                         (is (identical? NaN-string @f))
+;                         (is (= (count es) (count format-me)))
+;                         (doseq [[e n'] (map vector es format-me)]
+;                          (reset! n n')
+;                          (is (= e @f))))]
+;
+;   (taoensso.timbre/debug "Test formatting in en locale")
+;   (reset! l "en")
+;   (test-formatting ["0" "0.1" "1" "1.1" "1.1" "1.1" "1.1" "2" "2" "1.9" "1.5" "-1" "1" "10" "100" "1,000" "10,000" "1,000,000" "1,000,000,000"])
+;
+;   (taoensso.timbre/debug "Test formatting in en-IN locale")
+;   (reset! l "en-IN")
+;   (test-formatting ["0" "0.1" "1" "1.1" "1.1" "1.1" "1.1" "2" "2" "1.9" "1.5" "-1" "1" "10" "100" "1,000" "10,000" "10,00,000" "1,00,00,00,000"])
+;
+;   (taoensso.timbre/debug "Test formatting in gl locale")
+;   (reset! l "gl")
+;   (test-formatting ["0" "0,1" "1" "1,1" "1,1" "1,1" "1,1" "2" "2" "1,9" "1,5" "-1" "1" "10" "100" "1.000" "10.000" "1.000.000" "1.000.000.000"])))

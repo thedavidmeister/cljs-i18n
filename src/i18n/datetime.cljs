@@ -7,8 +7,8 @@
   goog.i18n.DateTimeParse
   goog.i18n.TimeZone
   taoensso.timbre
-  time.data
-  [javelin.core :as j]
+  ; time.data
+  ; [javelin.core :as j]
   [cljs.test :refer-macros [deftest is]]))
 
 ; PRIVATE API. DO NOT CALL THIS EXTERNALLY. IT IS FAR TOO EASY TO SCREW THIS UP.
@@ -53,7 +53,8 @@
 
 (defn -format
  [d & {:keys [locale pattern tz]}]
- {:pre [(time.data/date-time? d)
+ {:pre [
+        ; (time.data/date-time? d)
         (string? locale)]
   :post [(string? locale)]}
  (let [locale (or locale @i18n.locale/supported-user-locale)
@@ -66,15 +67,16 @@
    (when tz (timezone tz)))))
 (def format (memoize -format))
 
-(defn format-cell
- [d & {:keys [pattern locale tz]}]
- (let [locale (or locale i18n.locale/supported-user-locale)]
-  (j/cell= (format d :locale locale :pattern pattern :tz tz))))
+; (defn format-cell
+;  [d & {:keys [pattern locale tz]}]
+;  (let [locale (or locale i18n.locale/supported-user-locale)]
+;   (j/cell= (format d :locale locale :pattern pattern :tz tz))))
 
 (defn -parse
  [s & {:keys [locale pattern]}]
  {:pre [(string? s) (string? locale)]
-  :post [(time.data/date-time? %)]}
+  :post []}
+         ; (time.data/date-time? %)]}
  (let [locale (or locale @i18n.locale/supported-user-locale)
        pattern (or pattern default-pattern)]
   (i18n.goog/set-locale! locale)
@@ -87,10 +89,10 @@
    d)))
 (def parse (memoize -parse))
 
-(defn parse-cell
- [s & {:keys [pattern locale]}]
- (let [locale (or locale i18n.locale/supported-user-locale)]
-  (j/cell= (parse s :locale locale :pattern pattern))))
+; (defn parse-cell
+;  [s & {:keys [pattern locale]}]
+;  (let [locale (or locale i18n.locale/supported-user-locale)]
+;   (j/cell= (parse s :locale locale :pattern pattern))))
 
 ; TESTS.
 

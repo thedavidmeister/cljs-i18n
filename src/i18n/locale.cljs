@@ -1,13 +1,13 @@
 (ns i18n.locale
- (:require 
-  auth.state
-  hoplon.storage-atom
-  [javelin.core :as j]
-  ajax.core
-  wire.data
+ (:require
+  ; auth.state
+  ; hoplon.storage-atom
+  ; [javelin.core :as j]
+  ; ajax.core
+  ; wire.data
   i18n.data
-  env.data
-  wheel.error.core
+  ; env.data
+  ; wheel.error.core
   [cljs.test :refer-macros [deftest is are]]))
 
 (def default-langcode "en-GB")
@@ -36,7 +36,7 @@
   ; fallback to the default langcode and carry on until the bug is fixed.
   :else
   (do
-   (wheel.error.core/error :error (str "Can't fix non-string langcode: " (pr-str langcode)))
+   ; (wheel.error.core/error :error (str "Can't fix non-string langcode: " (pr-str langcode)))
    default-langcode)))
 
 (defn langcodes->supported-langcode
@@ -48,12 +48,12 @@
   (into (vec langcodes) [default-langcode])))
 
 ; https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Accept-Language
-(def accept-language
- (let [c (j/cell nil)]
-  (ajax.core/GET
-   (str "//" wire.data/back-host "/i18n/locale/accept-language")
-   {:handler #(reset! c %)})
-  (hoplon.storage-atom.local-storage c ::accept-language)))
+; (def accept-language
+;  (let [c (j/cell nil)]
+;   (ajax.core/GET
+;    (str "//" wire.data/back-host "/i18n/locale/accept-language")
+;    {:handler #(reset! c %)})
+;   (hoplon.storage-atom.local-storage c ::accept-language)))
 
 (defn accept-language->langcodes
  "Turns a raw accept-language string into a seq of langcodes."
@@ -112,27 +112,27 @@
  (let [locale (:locale profile)]
   (if (string? locale) [locale] locale)))
 
-(defn user-locale-cell
- ([] (user-locale-cell auth.state/user-profile (j/cell= (accept-language->langcodes accept-language))))
- ([profile] (user-locale-cell profile (j/cell= (accept-language->langcodes accept-language))))
- ([profile langcodes]
-  (j/with-let [c (j/cell=
-                  (map
-                   fix-langcode
-                   (or (profile->langcodes profile)
-                       langcodes
-                       (navigator-language)
-                       [default-langcode])))]
-   (j/cell= (assert (and (coll? c)
-                         (every? valid-langcode? c)))))))
-(def user-locale (user-locale-cell))
-(def supported-user-locale
- (j/cell=
-  (if-not env.data/testing?
-   (langcodes->supported-langcode user-locale)
-   ; Hardcode the locale to en-AU in testing environments so that CI doesn't
-   ; become a PITA to configure.
-   "en-AU")))
+; (defn user-locale-cell
+;  ([] (user-locale-cell auth.state/user-profile (j/cell= (accept-language->langcodes accept-language))))
+;  ([profile] (user-locale-cell profile (j/cell= (accept-language->langcodes accept-language))))
+;  ([profile langcodes]
+;   (j/with-let [c (j/cell=
+;                   (map
+;                    fix-langcode
+;                    (or (profile->langcodes profile)
+;                        langcodes
+;                        (navigator-language)
+;                        [default-langcode])))]
+;    (j/cell= (assert (and (coll? c)
+;                          (every? valid-langcode? c)))))))
+; (def user-locale (user-locale-cell))
+; (def supported-user-locale
+;  (j/cell=
+;   (if-not env.data/testing?
+;    (langcodes->supported-langcode user-locale)
+;    ; Hardcode the locale to en-AU in testing environments so that CI doesn't
+;    ; become a PITA to configure.
+;    "en-AU")))
 
 ; TESTS.
 
@@ -164,28 +164,28 @@
   "fr-CH, fr;q=0.9, en;q=0.8, de;q=0.7, *;q=0.5" ["fr-CH" "fr" "en" "de" default-langcode]
   "fr-CH, fr;q=0.9, de;q=0.7, en;q=0.8, *;q=0.5" ["fr-CH" "fr" "en" "de" default-langcode]))
 
-(deftest ??user-locale-cell
- (let [p (j/cell nil)
-       l (j/cell nil)
-       c (user-locale-cell p l)]
-  (is (= (or (navigator-language) [default-langcode])
-         @c))
-
-  (reset! p {:locale "fr"})
-  (is (= ["fr"] @c))
-
-  (reset! p {:locale "en_US"})
-  (is (= ["en-US"] @c))
-
-  (reset! p {:locale ["zh"]})
-  (is (= ["zh"] @c))
-
-  ; p should take preference over l.
-  (reset! l ["da"])
-  (is (= ["zh"] @c))
-
-  (reset! p nil)
-  (is (= ["da"] @c))
-
-  (reset! l ["en"])
-  (is (= ["en"] @c))))
+; (deftest ??user-locale-cell
+;  (let [p (j/cell nil)
+;        l (j/cell nil)
+;        c (user-locale-cell p l)]
+;   (is (= (or (navigator-language) [default-langcode])
+;          @c))
+;
+;   (reset! p {:locale "fr"})
+;   (is (= ["fr"] @c))
+;
+;   (reset! p {:locale "en_US"})
+;   (is (= ["en-US"] @c))
+;
+;   (reset! p {:locale ["zh"]})
+;   (is (= ["zh"] @c))
+;
+;   ; p should take preference over l.
+;   (reset! l ["da"])
+;   (is (= ["zh"] @c))
+;
+;   (reset! p nil)
+;   (is (= ["da"] @c))
+;
+;   (reset! l ["en"])
+;   (is (= ["en"] @c))))
