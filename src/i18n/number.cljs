@@ -80,7 +80,7 @@
  {:pre [(or (nil? n) (number? n))
         (or (nil? locale) (string? locale))]
   :post [(string? %)]}
- (let [locale (or locale (-> i18n.data/locales :default :code))
+ (let [locale (or locale i18n.data/default-locale)
        nil-string (or nil-string default-nil-string)
        nan-string (or nan-string default-nan-string)]
   (cond

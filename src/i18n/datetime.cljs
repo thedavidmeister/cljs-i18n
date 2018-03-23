@@ -2,13 +2,12 @@
  (:require
   i18n.goog
   i18n.locale
+  i18n.data
   goog.i18n.DateTimeSymbols
   goog.i18n.DateTimeFormat
   goog.i18n.DateTimeParse
   goog.i18n.TimeZone
   taoensso.timbre
-  ; time.data
-  ; [javelin.core :as j]
   [cljs.test :refer-macros [deftest is]]))
 
 ; PRIVATE API. DO NOT CALL THIS EXTERNALLY. IT IS FAR TOO EASY TO SCREW THIS UP.
@@ -57,7 +56,7 @@
         ; (time.data/date-time? d)
         (string? locale)]
   :post [(string? locale)]}
- (let [locale (or locale @i18n.locale/supported-user-locale)
+ (let [locale (or locale i18n.data/default-locale)
        pattern (or pattern default-pattern)]
   (i18n.goog/set-locale! locale)
   (.format
@@ -77,7 +76,7 @@
  {:pre [(string? s) (string? locale)]
   :post []}
          ; (time.data/date-time? %)]}
- (let [locale (or locale @i18n.locale/supported-user-locale)
+ (let [locale (or locale i18n.data/default-locale)
        pattern (or pattern default-pattern)]
   (i18n.goog/set-locale! locale)
   (let [d (js/Date.)]

@@ -12,11 +12,11 @@
 
 `i18n.locale/valid-locale?`
 
-Takes a string and returns `true` if it looks like an ISO locale.
+Takes a string and returns `true` if it looks like a locale we might support.
 
 `i18n.locale/fix-locale`
 
-Takes a string and attempts to hammer it into an ISO locale.
+Takes an invalid locale string and attempts to hammer it into an ISO locale.
 
 `i18n.locale/supported-locale`
 
@@ -150,7 +150,7 @@ to put a pull request up for inclusion.
 
 ## Accepted locale code formats
 
-Ideally pass in locales as ISO styles strings.
+Ideally pass in locales to `:locale` params as ISO styles strings.
 
 i.e. `<lowercase language code>-<uppercase country code>`.
 
@@ -165,10 +165,10 @@ In the wild, locales are also often represented:
 - as a sequence of options, e.g. `["en-US" "en"]`
 - an [`Accept-Language` header](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Accept-Language), e.g. `"fr-CH, fr;q=0.9, en;q=0.8, de;q=0.7, *;q=0.5"`
 
-Any public API function that accepts a locale as an argument will normalize the
-locale as per `i18n.locale/normalize-locale`. The basic logic is to select the
-first supported locale in a sequence/accept string then fix the casing and
-delimiter.
+Any public API function that accepts a locale as an argument will normalize to a
+supported locale as per `i18n.locale/supported-locale`. The basic logic is to
+select the first supported locale in a sequence/accept string by fixing the
+casing and delimiter if possible as per `i18n.locale/fix-locale`.
 
 If a locale is not supported (see above) then:
 
@@ -180,7 +180,44 @@ If a locale is not supported (see above) then:
 
 The default locale (at the time of writing) is set by Google as `"en"`.
 
-## Number format and parse
+## i18n.locale - Working with locales
+
+`i18n.locale/valid-locale?`
+
+Takes a string and returns `true` if it looks like a locale we might support.
+
+Only singular locale strings are valid, no sequences or headers will validate.
+
+Typically to be valid a string must:
+
+- Have a lowercase langcode
+- Have no country code, or an uppercase country code
+- Be delimited by `-`
+
+But there are exceptions if the locale string is a key in `i18n.data/locales`.
+
+Notably `"sr-Latn"` and `"es-419"` are considered valid locales.
+
+Keyword locales like `:default` that are found in `i18n.data/locales` are NOT
+considered valid.
+
+`i18n.locale/fix-locale`
+
+Takes an invalid locale string and attempts to hammer it into an ISO locale.
+
+`i18n.locale/supported-locale`
+
+Takes a string or seq and returns the best match from supported locales.
+
+`i18n.locale/accept-language->locales`
+
+Takes an `Accept-Language` header string and converts to a seq of locales.
+
+`i18n.locale/browser-locale`
+
+Attempts to detect the user's preferred locale from the browser or OS.
+
+## i18n.number - Number format and parse
 
 Both formatting and parsing of numbers is supported in `i18n.number`.
 

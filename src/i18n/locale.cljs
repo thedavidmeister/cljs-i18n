@@ -4,14 +4,26 @@
   taoensso.timbre
   [cljs.test :refer-macros [deftest is are]]))
 
-(def default-locale (-> i18n.data/locales :default :code))
-
 (defn valid-locale?
  [locale]
- (and
-  (string? locale)
-  ; Many systems try to ship _ instead of - e.g. en_US vs. en-US
-  (= -1 (.indexOf locale "_"))))
+ (boolean
+  (and
+   ; only accept singular locales
+   (string? locale)
+   (or
+    ; always validate supported locales, provided they are a string
+    (contains? i18n.data/locales locale)
+    (and
+     (not (clojure.string/index-of locale ","))
+     ; only valid split is on `-`
+     (let [[lang country] (clojure.string/split locale "-")]
+      (and
+       ; lang is required and must be lowercase alphabetical
+       lang (re-matches #"[a-z]" lang)
+       ; country is optional but must be uppercase alphabetical if set
+       (if country
+        (re-matches #"[A-Z]" country)
+        true))))))))
 
 (defn fix-locale
  "Attempt to fix common problems with almost-valid langcodes"
@@ -32,7 +44,7 @@
   :else
   (do
    (taoensso.timbre/error (str "Can't fix non-string langcode: " (pr-str locale)))
-   default-locale)))
+   i18n.data/default-locale)))
 
 (defn normalize-locale
  [locale]
@@ -46,7 +58,7 @@
   :post [(valid-locale? %)]}
  (some
   #(when (get i18n.data/locales %) %)
-  (into (vec langcodes) [locale])))
+  (into (vec langcodes) [i18n.data/default-locale])))
 
 ; https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Accept-Language
 ; (def accept-language
@@ -88,7 +100,7 @@
    (map
     (fn [langcode]
      (if (= "*" langcode)
-      default-locale
+      i18n.data/default-locale
       langcode)))
    seq)))
 
@@ -116,12 +128,24 @@
 ; TESTS.
 
 (deftest ??valid-locale
+ (prn (remove valid-locale? (keys i18n.data/locales)))
  (are [l] (valid-locale? l)
   "en"
-  "en-GB")
+  "en-GB"
+  ; supported exceptions to the rules
+  "sr-Latn"
+  "es-419")
 
  (are [l] (not (valid-locale? l))
-  "en_GB"))
+  "en_GB"
+  "EN-GB"
+  "EN_GB"
+  "en-gb"
+  "en_gb"
+  "En-Gb"
+  "en, fr;q=0.5"
+  ["en" "fr"]
+  :default))
 
 (deftest ??fix-locale
  (are [l e] (= e (fix-locale l))
@@ -137,34 +161,8 @@
   nil nil
   "" nil
   "en" ["en"]
-  "*" [default-langcode]
+  "*" [i18n.data/default-locale]
   "fr;q=0.5, en" ["en" "fr"]
   "da, en-gb;q=0.8, en;q=0.7" ["da" "en-gb" "en"]
-  "fr-CH, fr;q=0.9, en;q=0.8, de;q=0.7, *;q=0.5" ["fr-CH" "fr" "en" "de" default-langcode]
-  "fr-CH, fr;q=0.9, de;q=0.7, en;q=0.8, *;q=0.5" ["fr-CH" "fr" "en" "de" default-langcode]))
-
-; (deftest ??user-locale-cell
-;  (let [p (j/cell nil)
-;        l (j/cell nil)
-;        c (user-locale-cell p l)]
-;   (is (= (or (navigator-language) [default-langcode])
-;          @c))
-;
-;   (reset! p {:locale "fr"})
-;   (is (= ["fr"] @c))
-;
-;   (reset! p {:locale "en_US"})
-;   (is (= ["en-US"] @c))
-;
-;   (reset! p {:locale ["zh"]})
-;   (is (= ["zh"] @c))
-;
-;   ; p should take preference over l.
-;   (reset! l ["da"])
-;   (is (= ["zh"] @c))
-;
-;   (reset! p nil)
-;   (is (= ["da"] @c))
-;
-;   (reset! l ["en"])
-;   (is (= ["en"] @c))))
+  "fr-CH, fr;q=0.9, en;q=0.8, de;q=0.7, *;q=0.5" ["fr-CH" "fr" "en" "de" i18n.data/default-locale]
+  "fr-CH, fr;q=0.9, de;q=0.7, en;q=0.8, *;q=0.5" ["fr-CH" "fr" "en" "de" i18n.data/default-locale]))
