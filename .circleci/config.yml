@@ -1,0 +1,58 @@
+# Clojure CircleCI 2.0 configuration file
+#
+# Check https://circleci.com/docs/2.0/language-clojure/ for more details
+#
+version: 2
+jobs:
+  build:
+    docker:
+      - image: circleci/clojure:boot-browsers
+
+    working_directory: ~/repo
+
+    environment:
+      # Customize the JVM maximum heap limit
+      BOOT_JVM_OPTIONS: -Xmx3g -client -XX:+TieredCompilation -XX:TieredStopAtLevel=1 -XX:+UseConcMarkSweepGC -XX:+CMSClassUnloadingEnabled -Xverify:none
+
+    steps:
+      - checkout
+
+      # Download and cache dependencies
+      - restore_cache:
+          keys:
+          - v1-dependencies-{{ checksum "build.boot" }}
+          # fallback to using the latest cache if no exact match is found
+          - v1-dependencies-
+
+      # CLJS tests should not need the db and are more likely to fail, so we run
+      # them first.
+      - run: boot tests-cljs
+
+      - save_cache:
+          paths:
+            - "~/bin"
+            - "~/.m2"
+            - "~/.boot/cache/bin"
+            - "~/.boot/cache/lib"
+          key: v1-dependencies-{{ checksum "build.boot" }}
+
+  deploy:
+    machine: true
+    # Push snapshots of master through to github
+    steps:
+      - run: git config --global user.email $GIT_EMAIL
+      - run: git config --global user.name $GIT_NAME
+      - run: boot deploy
+
+# https://circleci.com/docs/2.0/deployment-integrations/
+workflows:
+  version: 2
+  build-and-deploy:
+    jobs:
+      - build
+      - deploy:
+        requires:
+          - build
+        filters:
+          branches:
+            only: master
