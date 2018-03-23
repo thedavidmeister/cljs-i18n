@@ -17,6 +17,7 @@
    [doo "0.1.8"]
 
    ; everything else...
+   [samestep/boot-refresh "0.1.0" :scope "test"]
    [com.taoensso/timbre "4.10.0" :scope "test"]])
 
 (task-options!
