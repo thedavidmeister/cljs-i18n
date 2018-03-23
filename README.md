@@ -26,6 +26,9 @@ deeply complected with each other. E.g. the "current locale" is set globally but
 configuration like "formatter pattern" is set as a property on a local
 `formatter` object.
 
+The documentation for Google Closure's i18n code is almost nonexistant. It is
+easiest to read the code directly to understand how it all works.
+
 Natively `goog.i18n` does not expose the ability to work with more than one
 locale at a time. Internally it has several mostly undocumented global
 properties such as `goog.i18n.NumberFormatSymbols` and
@@ -88,3 +91,102 @@ of additional locales available in `goog.i18n.NumberFormatSymbolsExt`.
 Adding new locales is a simple matter of adding the relevant k/v pair to
 `i18n.data/locales`. If a locale you're looking for is missing please feel free
 to put a pull request up for inclusion.
+
+## Accepted locale code formats
+
+Ideally pass in locales as ISO styles strings.
+
+i.e. `<lowercase language code>-<uppercase country code>`.
+
+So Hong Kong `HK` Chinese `zh` becomes `zh-HK`.
+
+Passing in a valid locale string ensures maximum speed and compatibility.
+
+In the wild, locales are also often represented:
+
+- with `_` rather than `-`, e.g. `en_US`
+- with inconsistent casing, e.g. `EN-US`
+- as a sequence of options, e.g. `["en-US" "en"]`
+- an [`Accept-Language` header](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Accept-Language), e.g. `"fr-CH, fr;q=0.9, en;q=0.8, de;q=0.7, *;q=0.5"`
+
+Any public API function that accepts a locale as an argument will normalize the
+locale as per `i18n.locale/normalize-locale`. The basic logic is to select the
+first supported locale in a sequence/accept string then fix the casing and
+delimiter.
+
+If a locale is not supported (see above) then:
+
+- The next supported locale in the sequence will be used
+- If no locale in a sequence is supported, the default locale will be used
+- If the locale is singular then the default locale will be used instead
+- If the locale is corrupt and cannot be parsed at all an error will be logged
+  via `taoensso.timbre/error` and the default locale used instead
+
+The default locale (at the time of writing) is set by Google as `"en"`.
+
+## Number format and parse
+
+Both formatting and parsing of numbers is supported in `i18n.number`.
+
+The public API consists of 2 fns:
+
+- `i18n.number/format`
+- `i18n.number/parse`
+
+Both take a number/string to be formatted/parsed as the first arg and optional
+k/v pairs for other options.
+
+### Shared options
+
+`:locale`
+
+Any supported locale code (see above).
+
+`:pattern`
+
+A CLDR number formatting pattern or one of the preconfigured formats as per
+`i18n.number/formats`. Currently supported formats: `:decimal`, `:scientific`,
+`:percent`, `:currency`, `:compact-short`, `:compact-long`.
+
+Official documentation for CLDR patterns:
+
+http://cldr.unicode.org/translation/number-patterns
+
+Example patterns:
+
+https://github.com/google/closure-library/blob/master/closure/goog/i18n/numberformatsymbols.js
+
+### Format options
+
+Format has a few extra options not available to parse.
+
+`:min-fraction-digits`
+
+Minimum number of digits to allow for fractions. Defaults to `0`.
+
+Fills out missing digits with trailing zeros.
+
+Providing a `:min-fraction-digits` greater than `:max-fraction-digits` throws an
+error (see below).
+
+```clojure
+(format 1) ; "1"
+(format 1 :min-fraction-digits 1) ; "1.0"
+```
+
+`:max-fraction-digits`
+
+Maximum number of digits to allow for fractions. Defaults to `1`.
+
+```clojure
+(format (/ 1 3)) ; "1.3"
+(format (/ 1 3) :max-fraction-digits 1) ; "1.3"
+(format (/ 1 3) :max-fraction-digits 2) ; "1.33"
+(format (/ 1 3) :max-fraction-digits 3) ; "1.333"
+```
+
+`trailing-zeros?`
+
+`nil-string`
+
+`nan-string`

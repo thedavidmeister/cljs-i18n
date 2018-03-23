@@ -121,7 +121,15 @@
 
  (let [n 1]
   (is (= "1" (format n)))
-  (is (= "1.0" (format n :min-fraction-digits 1)))))
+  (is (= "1.0" (format n :min-fraction-digits 1))))
+
+ (let [n (/ 1 3)]
+  (is
+   (= 
+    "Min value must be less than max value"
+    (try (format n :min-fraction-digits 2 :max-fraction-digits 1)
+     (catch js/Error e
+      (.-message e)))))))
 
 (deftest ??locale->symbols
  (is (identical? goog.i18n.NumberFormatSymbols_en_AU (locale->symbols "en-AU")))
