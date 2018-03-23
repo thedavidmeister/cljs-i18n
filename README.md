@@ -26,6 +26,9 @@ deeply complected with each other. E.g. the "current locale" is set globally but
 configuration like "formatter pattern" is set as a property on a local
 `formatter` object.
 
+The documentation for Google Closure's i18n code is almost nonexistant. It is
+neccessary to read the code directly to understand how to use it.
+
 Natively `goog.i18n` does not expose the ability to work with more than one
 locale at a time. Internally it has several mostly undocumented global
 properties such as `goog.i18n.NumberFormatSymbols` and
@@ -38,7 +41,7 @@ memoized and implemented automated tests for as much as I can. As localisation
 of a string for a given locale/pattern is totally referentially transparent the
 default is to cache aggressively using native cljs `memoize`.
 
-Of course, the aggressive memoization could lead to memory leaks, depending on
+Of course, the aggressive memoization could lead to memory issues, depending on
 what you are doing in your application. It's great if you have a few strings
 that are being re-used across the UI, potentially very bad if you have a lot of
 unique strings to process.
@@ -88,3 +91,154 @@ of additional locales available in `goog.i18n.NumberFormatSymbolsExt`.
 Adding new locales is a simple matter of adding the relevant k/v pair to
 `i18n.data/locales`. If a locale you're looking for is missing please feel free
 to put a pull request up for inclusion.
+
+## Accepted locale code formats
+
+Ideally pass in locales as ISO styles strings.
+
+i.e. `<lowercase language code>-<uppercase country code>`.
+
+So Hong Kong `HK` Chinese `zh` becomes `zh-HK`.
+
+Passing in a valid locale string ensures maximum speed and compatibility.
+
+In the wild, locales are also often represented:
+
+- with `_` rather than `-`, e.g. `en_US`
+- with inconsistent casing, e.g. `EN-US`
+- as a sequence of options, e.g. `["en-US" "en"]`
+- an [`Accept-Language` header](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Accept-Language), e.g. `"fr-CH, fr;q=0.9, en;q=0.8, de;q=0.7, *;q=0.5"`
+
+Any public API function that accepts a locale as an argument will normalize the
+locale as per `i18n.locale/normalize-locale`. The basic logic is to select the
+first supported locale in a sequence/accept string then fix the casing and
+delimiter.
+
+If a locale is not supported (see above) then:
+
+- The next supported locale in the sequence will be used
+- If no locale in a sequence is supported, the default locale will be used
+- If the locale is singular then the default locale will be used instead
+- If the locale is corrupt and cannot be parsed at all an error will be logged
+  via `taoensso.timbre/error` and the default locale used instead
+
+The default locale (at the time of writing) is set by Google as `"en"`.
+
+## Number format and parse
+
+Both formatting and parsing of numbers is supported in `i18n.number`.
+
+The public API consists of 2 fns:
+
+- `i18n.number/format`
+- `i18n.number/parse`
+
+Both take a number/string to be formatted/parsed as the first arg and optional
+k/v pairs for other options.
+
+### Shared options
+
+`:locale`
+
+Any supported locale code (see above).
+
+`:pattern`
+
+A CLDR number formatting pattern or one of the preconfigured formats as per
+`i18n.number/formats`. Currently supported formats: `:decimal`, `:scientific`,
+`:percent`, `:currency`, `:compact-short`, `:compact-long`.
+
+Official documentation for CLDR patterns:
+
+http://cldr.unicode.org/translation/number-patterns
+
+Example patterns:
+
+https://github.com/google/closure-library/blob/master/closure/goog/i18n/numberformatsymbols.js
+
+### Format options
+
+Format has a few extra options not available to parse.
+
+See `i18n.number` tests for more examples.
+
+`:min-fraction-digits`
+
+Integer minimum number of digits to allow for fractions.
+
+Default is `0`, max is `:max-fraction-digits` (see below).
+
+Fills out missing digits with trailing zeros.
+
+```clojure
+(format 1) ; "1"
+(format 1 :min-fraction-digits 1) ; "1.0"
+```
+
+`:max-fraction-digits`
+
+Integer maximum number of digits to allow for fractions.
+
+Default is `3`, max is `308`.
+
+Does NOT fill out missing digits with trailing zeros.
+
+Applies rounding to truncated values.
+
+```clojure
+(format (/ 10 3)) ; "3.333"
+(format (/ 10 3) :max-fraction-digits 1) ; "3.3"
+(format (/ 10 3) :max-fraction-digits 2) ; "3.33"
+(format (/ 10 3) :max-fraction-digits 3) ; "3.333"
+(format 1 :max-fraction-digits 3) ; "1"
+(format 1.5678) ; "1.568"
+```
+
+`:significant-digits`
+
+Integer number of significant digits for the formatted number.
+
+Default is `0`, max is `:max-fraction-digits`.
+
+CANNOT be combined with `:min-fraction-digits`.
+
+Applies rounding to truncated values.
+
+```clojure
+(format (/ 10 3) :significant-digits 3) ; "3.33"
+(format (/ 1 3) :significant-digits 3) ; "0.333"
+(format 1.2 :significant-digits 3) ; "1.2"
+(format (/ 2 3) :significant-digits 3) ; "0.667"
+```
+
+`trailing-zeros?`
+
+Boolean to show trailing zeros if `:significant-digits` is positive.
+
+Has no effect on `:min-fraction-digits` or `:max-fraction-digits`.
+
+```clojure
+(format 1.2 :significant-digits 3 :trailing-zeros? true) ; "1.20"
+```
+
+`nil-string`
+
+String to return for `nil`.
+
+Default is `""`.
+
+```clojure
+(format nil) ; ""
+(format nil :nil-string "-") ; "-"
+```
+
+`nan-string`
+
+String to return for `##NaN`.
+
+Default is `""`.
+
+```clojure
+(format ##NaN) ; ""
+(format ##NaN :nan-string "-") ; "-"
+```

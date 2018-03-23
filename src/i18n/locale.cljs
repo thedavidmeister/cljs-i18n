@@ -1,48 +1,49 @@
 (ns i18n.locale
  (:require
-  ; auth.state
-  ; hoplon.storage-atom
-  ; [javelin.core :as j]
-  ; ajax.core
-  ; wire.data
   i18n.data
-  ; env.data
-  ; wheel.error.core
+  taoensso.timbre
   [cljs.test :refer-macros [deftest is are]]))
 
 (def default-langcode "en-GB")
 
-(defn valid-langcode?
- [langcode]
- (and (string? langcode)
-      ; Many systems try to ship _ instead of - e.g. en_US vs. en-US
-      (= -1 (.indexOf langcode "_"))))
+(defn valid-locale?
+ [locale]
+ (and
+  (string? locale)
+  ; Many systems try to ship _ instead of - e.g. en_US vs. en-US
+  (= -1 (.indexOf locale "_"))))
 
-(defn fix-langcode
+(defn fix-locale
  "Attempt to fix common problems with almost-valid langcodes"
- [langcode]
+ [locale]
  (cond
-  ; Some systems will provide underscores in langcodes which is non compliant
+  ; Some systems will provide underscores in locales which is non compliant
   ; with the web spec.
-  (string? langcode)
-  (clojure.string/replace langcode "_" "-")
+  (string? locale)
+  (clojure.string/replace locale "_" "-")
 
   ; Somehow we occassionally get a vector like ["en-GB"] which needs to be
   ; unwrapped.
-  (and (sequential? langcode) (= 1 (count langcode)))
-  (fix-langcode (first langcode))
+  (and (sequential? locale) (= 1 (count locale)))
+  (fix-locale (first locale))
 
-  ; Throw a soft error if the langcode isn't something we can fix. We can
-  ; fallback to the default langcode and carry on until the bug is fixed.
+  ; Throw a soft error if the locale isn't something we can fix. We can
+  ; fallback to the default locale and carry on until the bug is fixed.
   :else
   (do
-   ; (wheel.error.core/error :error (str "Can't fix non-string langcode: " (pr-str langcode)))
+   (taoensso.timbre/error (str "Can't fix non-string langcode: " (pr-str locale)))
    default-langcode)))
+
+(defn normalize-locale
+ [locale]
+ (if (valid-locale? locale)
+  locale
+  (fix-locale locale)))
 
 (defn langcodes->supported-langcode
  [langcodes]
  {:pre [(coll? langcodes)]
-  :post [(valid-langcode? %)]}
+  :post [(valid-locale? %)]}
  (some
   #(when (get i18n.data/locales %) %)
   (into (vec langcodes) [default-langcode])))
@@ -118,13 +119,13 @@
 ;  ([profile langcodes]
 ;   (j/with-let [c (j/cell=
 ;                   (map
-;                    fix-langcode
+;                    fix-locale
 ;                    (or (profile->langcodes profile)
 ;                        langcodes
 ;                        (navigator-language)
 ;                        [default-langcode])))]
 ;    (j/cell= (assert (and (coll? c)
-;                          (every? valid-langcode? c)))))))
+;                          (every? valid-locale? c)))))))
 ; (def user-locale (user-locale-cell))
 ; (def supported-user-locale
 ;  (j/cell=
@@ -138,16 +139,16 @@
 
 ; TESTS.
 
-(deftest ??valid-langcode
- (are [l] (valid-langcode? l)
+(deftest ??valid-locale
+ (are [l] (valid-locale? l)
   "en"
   "en-GB")
 
- (are [l] (not (valid-langcode? l))
+ (are [l] (not (valid-locale? l))
   "en_GB"))
 
-(deftest ??fix-langcode
- (are [l e] (= e (fix-langcode l))
+(deftest ??fix-locale
+ (are [l e] (= e (fix-locale l))
   "en" "en"
   "en-GB" "en-GB"
   "en_GB" "en-GB"

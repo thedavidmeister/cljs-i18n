@@ -1,7 +1,7 @@
 (ns i18n.goog
  (:require
   i18n.data
-  ; [javelin.core :as j]
+  i18n.locale
   [cljs.test :refer-macros [deftest is]]))
 
 (defn locale->symbols-fn
@@ -9,7 +9,7 @@
  ([k locales]
   {:pre [(keyword? k)]}
   (fn [locale]
-   (k (get locales locale (:default locales))))))
+   (k (get locales (i18n.locale/normalize-locale locale) (:default locales))))))
 
 (defn format-or-pattern->pattern
  [formats format-or-pattern]
@@ -32,9 +32,11 @@
   (swap! fs disj f))
 
  (defn set-locale! [locale]
-  (when-not (= @current-locale locale)
-   (doseq [f @fs] (f locale))
-   (reset! current-locale locale))))
+  (let [locale (i18n.locale/normalize-locale locale)]
+   (when-not (= @current-locale locale)
+    (doseq [f @fs]
+     (f locale))
+    (reset! current-locale locale)))))
 
 ; TESTS.
 
