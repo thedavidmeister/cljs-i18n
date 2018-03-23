@@ -121,8 +121,8 @@ Additionally this lib provides several things `goog.i18n` is missing that we
 need in order to work with an end-user's locale in the browser:
 
 - Extracting the user's preferred locale based on OS/browser/config settings
-- Normalizing langcodes format (e.g. `en_US` to `en-US`)
-- Extracting a supported langcode from `Accept-Language` HTTP headers
+- Normalizing locale's format (e.g. `en_US` to `en-US`)
+- Extracting a supported locale from `Accept-Language` HTTP headers
 
 ## Supported locales
 

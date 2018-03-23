@@ -28,7 +28,8 @@
 (defn fix-locale
  "Attempt to fix common problems with almost-valid locale strings"
  [locale]
- {:pre [(string? locale)]}
+ {:pre [(string? locale)]
+  :post [(valid-locale? %)]}
  (cond
   (valid-locale? locale)
   locale
@@ -57,20 +58,6 @@
    (taoensso.timbre/warn (str "Can't fix locale: " locale))
    i18n.data/default-locale)))
 
-(defn normalize-locale
- [locale]
- (if (valid-locale? locale)
-  locale
-  (fix-locale locale)))
-
-(defn langcodes->supported-langcode
- [langcodes]
- {:pre [(coll? langcodes)]
-  :post [(valid-locale? %)]}
- (some
-  #(when (get i18n.data/locales %) %)
-  (into (vec langcodes) [i18n.data/default-locale])))
-
 ; https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Accept-Language
 ; (def accept-language
 ;  (let [c (j/cell nil)]
@@ -79,8 +66,8 @@
 ;    {:handler #(reset! c %)})
 ;   (hoplon.storage-atom.local-storage c ::accept-language)))
 
-(defn accept-language->langcodes
- "Turns a raw accept-language string into a seq of langcodes."
+(defn accept-language->locales
+ "Turns a raw accept-language string into a seq of locales."
  [accept-language]
  {:pre [(or (string? accept-language) (nil? accept-language))]
   :post [(or (nil? %) (coll? %))]}
@@ -98,22 +85,39 @@
    (map
     (fn [s]
      (clojure.string/split s #";q=")))
-   ; Prepare pairs for sorting and sort to ensure langcodes are high to low q.
+   ; Prepare pairs for sorting and sort to ensure locales are high to low q.
    (map
-    (fn [[langcode q]]
-     [(js/parseFloat q) langcode]))
+    (fn [[locale q]]
+     [(js/parseFloat q) locale]))
    sort
    reverse
-   ; Return just the langcodes.
+   ; Return just the locales.
    (map second)
-   ; Replace the wildcard with our default langcode. Not sure if this is the
-   ; right thing to do here.
+   ; Replace the wildcard with our default locales. Don't have a lot of options
+   ; at this point.
    (map
-    (fn [langcode]
-     (if (= "*" langcode)
+    (fn [locale]
+     (if (= "*" locale)
       i18n.data/default-locale
-      langcode)))
+      locale)))
    seq)))
+
+(defn supported-locale
+ [locale]
+ {:pre [(or (string? locale) (sequential? locale) (nil? locale))]
+  :post [(valid-locale? %)]}
+ (if-not locale
+  i18n.data/default-locale
+  (let [ls (if (string? locale)
+            (accept-language->locales locale)
+            locale)]
+   (loop [[l & ls'] ls]
+    (if l
+     (let [fixed (fix-locale l)]
+      (if (contains? i18n.data/locales fixed)
+       fixed
+       (recur ls')))
+     i18n.data/default-locale)))))
 
 (defn navigator-language
  []
@@ -129,12 +133,6 @@
              (.-browserLanguage navigator)
              (.-systemLanguage navigator)))]
     (if (string? v) [v] v)))))
-
-(defn profile->langcodes
- [profile]
- {:post [(or (nil? %) (coll? %))]}
- (let [locale (:locale profile)]
-  (if (string? locale) [locale] locale)))
 
 ; TESTS.
 
@@ -181,8 +179,8 @@
   "En" "en"
   "en_gb" "en-GB"))
 
-(deftest ??accept-language-seq
- (are [al e] (= e (accept-language->langcodes al))
+(deftest ??accept-language->locales
+ (are [al e] (= e (accept-language->locales al))
   nil nil
   "" nil
   "en" ["en"]
@@ -191,3 +189,7 @@
   "da, en-gb;q=0.8, en;q=0.7" ["da" "en-gb" "en"]
   "fr-CH, fr;q=0.9, en;q=0.8, de;q=0.7, *;q=0.5" ["fr-CH" "fr" "en" "de" i18n.data/default-locale]
   "fr-CH, fr;q=0.9, de;q=0.7, en;q=0.8, *;q=0.5" ["fr-CH" "fr" "en" "de" i18n.data/default-locale]))
+
+(deftest ??supported-locale
+ (are [l e] (= e (supported-locale l))
+  nil i18n.data/default-locale))
