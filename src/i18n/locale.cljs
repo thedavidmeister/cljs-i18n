@@ -19,31 +19,42 @@
      (let [[lang country] (clojure.string/split locale "-")]
       (and
        ; lang is required and must be lowercase alphabetical
-       lang (re-matches #"[a-z]" lang)
+       lang (re-matches #"[a-z]+" lang)
        ; country is optional but must be uppercase alphabetical if set
        (if country
-        (re-matches #"[A-Z]" country)
+        (re-matches #"[A-Z]+" country)
         true))))))))
 
 (defn fix-locale
- "Attempt to fix common problems with almost-valid langcodes"
+ "Attempt to fix common problems with almost-valid locale strings"
  [locale]
+ {:pre [(string? locale)]}
  (cond
+  (valid-locale? locale)
+  locale
+
   ; Some systems will provide underscores in locales which is non compliant
   ; with the web spec.
-  (string? locale)
-  (clojure.string/replace locale "_" "-")
+  (clojure.string/index-of locale "_")
+  (fix-locale (clojure.string/replace locale "_" "-"))
 
-  ; Somehow we occassionally get a vector like ["en-GB"] which needs to be
-  ; unwrapped.
-  (and (sequential? locale) (= 1 (count locale)))
-  (fix-locale (first locale))
+  ; fix casing
+  (clojure.string/index-of locale "-")
+  (fix-locale
+   (let [[lang country] (clojure.string/split locale "-")]
+    (str
+     (clojure.string/lower-case lang)
+     (when country
+      (str "-" (clojure.string/upper-case country))))))
+
+  (re-matches #"[A-z]+" locale)
+  (fix-locale (clojure.string/lower-case locale))
 
   ; Throw a soft error if the locale isn't something we can fix. We can
   ; fallback to the default locale and carry on until the bug is fixed.
   :else
   (do
-   (taoensso.timbre/error (str "Can't fix non-string langcode: " (pr-str locale)))
+   (taoensso.timbre/warn (str "Can't fix locale: " locale))
    i18n.data/default-locale)))
 
 (defn normalize-locale
@@ -144,18 +155,29 @@
   "En-Gb"
   "en, fr;q=0.5"
   ["en" "fr"]
-  :default)
+  :default
+  "")
 
  (is (= [:default] (remove valid-locale? (keys i18n.data/locales)))))
 
 (deftest ??fix-locale
  (are [l e] (= e (fix-locale l))
+  ; already valid
   "en" "en"
+  "sr-Latn" "sr-Latn"
   "en-GB" "en-GB"
+
+  ; not supported but technically valid
+  "asdf" "asdf"
+  "a-A" "a-A"
+
+  ; fix
   "en_GB" "en-GB"
-  ["en"] "en"
-  ["en-GB"] "en-GB"
-  ["en_GB"] "en-GB"))
+  "EN-GB" "en-GB"
+  "EN_GB" "en-GB"
+  "EN" "en"
+  "En" "en"
+  "en_gb" "en-GB"))
 
 (deftest ??accept-language-seq
  (are [al e] (= e (accept-language->langcodes al))

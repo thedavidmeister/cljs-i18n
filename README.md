@@ -175,8 +175,8 @@ If a locale is not supported (see above) then:
 - The next supported locale in the sequence will be used
 - If no locale in a sequence is supported, the default locale will be used
 - If the locale is singular then the default locale will be used instead
-- If the locale is corrupt and cannot be parsed at all an error will be logged
-  via `taoensso.timbre/error` and the default locale used instead
+- If the locale is corrupt and cannot be parsed at all a warning will be logged
+  via `taoensso.timbre/warn` and the default locale used instead
 
 The default locale (at the time of writing) is set by Google as `"en"`.
 
