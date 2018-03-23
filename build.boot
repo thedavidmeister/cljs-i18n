@@ -1,5 +1,5 @@
 (def project 'thedavidmeister/cljs-i18n)
-(def version "0.2.0")
+(def version "0.3.0")
 (def description "Wrapper around goog.i18n for cljs")
 (def github-url "https://github.com/thedavidmeister/cljs-i18n")
 
