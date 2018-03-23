@@ -26,7 +26,7 @@ Takes a string or seq and returns the best match from supported locales.
 
 Takes an `Accept-Language` header string and converts to a seq of locales.
 
-`i18n.locale/browser-locale`
+`i18n.locale/system-locale`
 
 Attempts to detect the user's preferred locale from the browser or OS.
 
@@ -228,7 +228,8 @@ Tries pretty hard to find a match for each candidate locale:
 - Sequences and accept headers are processed in order
 - Munged locales are fixed as per `fix-locale` (see above)
 - First match against supported locales is returned
-- If there are no matches in the whole sequence, all country codes are stripped
+- If there are no matches, country codes are stripped for a second pass
+- If there are no matches after two passes, falls back to default locale
 
 `i18n.locale/accept-language->locales`
 
@@ -240,9 +241,15 @@ https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Accept-Language
 
 The output sequence is ordered by "quality" scores from the header string.
 
-`i18n.locale/browser-locale`
+`i18n.locale/system-locale`
 
 Attempts to detect the user's preferred locale from the browser or OS.
+
+Runs through the various options documented at:
+
+https://zzz.buzz/2016/01/13/detect-browser-language-in-javascript/
+
+Normalizes the return values to a sequence of locales or `nil`.
 
 ## i18n.number - Number format and parse
 
