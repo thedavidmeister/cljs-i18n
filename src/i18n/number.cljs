@@ -19,7 +19,7 @@
 ; When passed nil instead of a number, what string to return?
 (def default-nil-string "")
 ; When passed NaN instead of a number, what string to return?
-(def default-nan-string "-")
+(def default-nan-string "NaN")
 
 ; PRIVATE API. DO NOT CALL THIS EXTERNALLY. IT IS FAR TOO EASY TO SCREW THIS UP.
 
@@ -114,10 +114,10 @@
 ; TESTS.
 
 (deftest ??format--fraction-digits
- (let [n (/ 1 3)]
-  (is (= "0.333" (format n)))
-  (is (= "0.3" (format n :max-fraction-digits 1)))
-  (is (= "0.33" (format n :max-fraction-digits 2)))
+ (let [n (/ 10 3)]
+  (is (= "3.333" (format n)))
+  (is (= "3.3" (format n :max-fraction-digits 1)))
+  (is (= "3.33" (format n :max-fraction-digits 2)))
 
   ; mix max and min
   (is
@@ -126,8 +126,14 @@
     (try (format n :min-fraction-digits 2 :max-fraction-digits 1)
      (catch js/Error e
       (.-message e)))))
-  (is (= "0.33" (format n :min-fraction-digits 1 :max-fraction-digits 2)))
-  (is (= "0.33" (format n :min-fraction-digits 2 :max-fraction-digits 2))))
+  (is (= "3.33" (format n :min-fraction-digits 1 :max-fraction-digits 2)))
+  (is (= "3.33" (format n :min-fraction-digits 2 :max-fraction-digits 2))))
+
+ (is
+  (=
+   "Can't combine significant digits and minimum fraction digits"
+   (try (format 1 :min-fraction-digits 1 :significant-digits 1)
+    (catch js/Error e (.-message e)))))
 
  (let [n 1]
   (is (= "1" (format n)))
@@ -138,12 +144,18 @@
   ; trailing-zeros? has no effect on :min-fraction-digits
   (is (= "1.0" (format n :min-fraction-digits 1 :trailing-zeros? false)))
   ; trailing-zeros? has no effect on :max-fraction-digits
-  (is (= "1" (format n :max-fraction-digits 2 :trailing-zeros? false)))
+  (is (= "1" (format n :max-fraction-digits 2 :trailing-zeros? false))))
 
-  ; rounding
-  (let [n 1.5678]
-   ; :max-fraction-digits rounds values
-   (is (= "1.568" (format n))))))
+ ; rounding
+ (let [n 1.5678]
+  ; :max-fraction-digits rounds values
+  (is (= "1.568" (format n))))
+
+ ; significant digits
+ (is (= "3.33" (format (/ 10 3) :significant-digits 3)))
+ (is (= "0.333" (format (/ 1 3) :significant-digits 3)))
+ (is (= "1.2" (format 1.2 :significant-digits 3)))
+ (is (= "1.20" (format 1.2 :significant-digits 3 :trailing-zeros? true))))
 
 (deftest ??locale->symbols
  (is (identical? goog.i18n.NumberFormatSymbols_en_AU (locale->symbols "en-AU")))
@@ -207,6 +219,7 @@
                   1.11
                   1.111
                   1.123
+                  1.9876
                   1.987
                   1.98
                   1.9
@@ -227,10 +240,18 @@
                          (is (= e (format n :locale l)))))]
 
   (taoensso.timbre/debug "Test formatting in en locale")
-  (test-formatting "en" ["0" "0.1" "1" "1.1" "1.11" "1.111" "1.123" "1.987" "1.98" "1.9" "1.5" "-1" "1" "10" "100" "1,000" "10,000" "1,000,000" "1,000,000,000"])
+  (test-formatting "en" ["0" "0.1" "1" "1.1" "1.11" "1.111" "1.123" "1.988" "1.987" "1.98" "1.9" "1.5" "-1" "1" "10" "100" "1,000" "10,000" "1,000,000" "1,000,000,000"])
 
   (taoensso.timbre/debug "Test formatting in en-IN locale")
-  (test-formatting "en-IN" ["0" "0.1" "1" "1.1" "1.11" "1.111" "1.123" "1.987" "1.98" "1.9" "1.5" "-1" "1" "10" "100" "1,000" "10,000" "10,00,000" "1,00,00,00,000"])
+  (test-formatting "en-IN" ["0" "0.1" "1" "1.1" "1.11" "1.111" "1.123" "1.988" "1.987" "1.98" "1.9" "1.5" "-1" "1" "10" "100" "1,000" "10,000" "10,00,000" "1,00,00,00,000"])
 
   (taoensso.timbre/debug "Test formatting in gl locale")
-  (test-formatting "gl" ["0" "0,1" "1" "1,1" "1,11" "1,111" "1,123" "1,987" "1,98" "1,9" "1,5" "-1" "1" "10" "100" "1.000" "10.000" "1.000.000" "1.000.000.000"])))
+  (test-formatting "gl" ["0" "0,1" "1" "1,1" "1,11" "1,111" "1,123" "1,988" "1,987" "1,98" "1,9" "1,5" "-1" "1" "10" "100" "1.000" "10.000" "1.000.000" "1.000.000.000"])))
+
+(deftest ??format--nil
+ (is (= "" (format nil)))
+ (is (= "x" (format nil :nil-string "x"))))
+
+(deftest ??format--nan
+ (is (= "NaN" (format ##NaN)))
+ (is (= "z" (format ##NaN :nan-string "z"))))

@@ -27,7 +27,7 @@ configuration like "formatter pattern" is set as a property on a local
 `formatter` object.
 
 The documentation for Google Closure's i18n code is almost nonexistant. It is
-easiest to read the code directly to understand how it all works.
+neccessary to read the code directly to understand how to use it.
 
 Natively `goog.i18n` does not expose the ability to work with more than one
 locale at a time. Internally it has several mostly undocumented global
@@ -41,7 +41,7 @@ memoized and implemented automated tests for as much as I can. As localisation
 of a string for a given locale/pattern is totally referentially transparent the
 default is to cache aggressively using native cljs `memoize`.
 
-Of course, the aggressive memoization could lead to memory leaks, depending on
+Of course, the aggressive memoization could lead to memory issues, depending on
 what you are doing in your application. It's great if you have a few strings
 that are being re-used across the UI, potentially very bad if you have a lot of
 unique strings to process.
@@ -183,13 +183,13 @@ Default is `3`, max is `308`.
 
 Does NOT fill out missing digits with trailing zeros.
 
-Rounds truncated values.
+Applies rounding to truncated values.
 
 ```clojure
-(format (/ 1 3)) ; "1.333"
-(format (/ 1 3) :max-fraction-digits 1) ; "1.3"
-(format (/ 1 3) :max-fraction-digits 2) ; "1.33"
-(format (/ 1 3) :max-fraction-digits 3) ; "1.333"
+(format (/ 10 3)) ; "3.333"
+(format (/ 10 3) :max-fraction-digits 1) ; "3.3"
+(format (/ 10 3) :max-fraction-digits 2) ; "3.33"
+(format (/ 10 3) :max-fraction-digits 3) ; "3.333"
 (format 1 :max-fraction-digits 3) ; "1"
 (format 1.5678) ; "1.568"
 ```
@@ -202,12 +202,40 @@ Default is `0`, max is `:max-fraction-digits`.
 
 CANNOT be combined with `:min-fraction-digits`.
 
+```clojure
+(format (/ 10 3) :significant-digits 3) ; "3.33"
+(format (/ 1 3) :significant-digits 3) ; "0.333"
+(format 1.2 :significant-digits 3) ; "1.2"
+```
+
 `trailing-zeros?`
 
-Boolean to show trailing zeros if `:significant-digits` is set.
+Boolean to show trailing zeros if `:significant-digits` is positive.
 
 Has no effect on `:min-fraction-digits` or `:max-fraction-digits`.
 
+```clojure
+(format 1.2 :significant-digits 3 :trailing-zeros? true) ; "1.20"
+```
+
 `nil-string`
 
+String to return for `nil`.
+
+Default is `""`.
+
+```clojure
+(format nil) ; ""
+(format nil :nil-string "-") ; "-"
+```
+
 `nan-string`
+
+String to return for `##NaN`.
+
+Default is `""`.
+
+```clojure
+(format ##NaN) ; ""
+(format ##NaN :nan-string "-") ; "-"
+```
