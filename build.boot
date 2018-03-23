@@ -12,3 +12,21 @@
    [adzerk/boot-cljs "2.1.4"]
    [crisptrutski/boot-cljs-test "0.3.5-SNAPSHOT"]
    [adzerk/bootlaces "0.1.13"]])
+
+(task-options!
+ pom {:project project
+      :version version
+      :description description
+      :url github-url
+      :scm {:url github-url}})
+
+(require
+ '[adzerk.bootlaces :refer :all])
+
+(bootlaces! version)
+
+(deftask deploy-clojars
+ []
+ (comp
+  (build-jar)
+  (push-release)))
