@@ -4,7 +4,7 @@
   taoensso.timbre
   [cljs.test :refer-macros [deftest is are]]))
 
-(def default-langcode "en-GB")
+(def default-locale (-> i18n.data/locales :default :code))
 
 (defn valid-locale?
  [locale]
@@ -32,7 +32,7 @@
   :else
   (do
    (taoensso.timbre/error (str "Can't fix non-string langcode: " (pr-str locale)))
-   default-langcode)))
+   default-locale)))
 
 (defn normalize-locale
  [locale]
@@ -46,7 +46,7 @@
   :post [(valid-locale? %)]}
  (some
   #(when (get i18n.data/locales %) %)
-  (into (vec langcodes) [default-langcode])))
+  (into (vec langcodes) [locale])))
 
 ; https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Accept-Language
 ; (def accept-language
@@ -88,7 +88,7 @@
    (map
     (fn [langcode]
      (if (= "*" langcode)
-      default-langcode
+      default-locale
       langcode)))
    seq)))
 
@@ -112,30 +112,6 @@
  {:post [(or (nil? %) (coll? %))]}
  (let [locale (:locale profile)]
   (if (string? locale) [locale] locale)))
-
-; (defn user-locale-cell
-;  ([] (user-locale-cell auth.state/user-profile (j/cell= (accept-language->langcodes accept-language))))
-;  ([profile] (user-locale-cell profile (j/cell= (accept-language->langcodes accept-language))))
-;  ([profile langcodes]
-;   (j/with-let [c (j/cell=
-;                   (map
-;                    fix-locale
-;                    (or (profile->langcodes profile)
-;                        langcodes
-;                        (navigator-language)
-;                        [default-langcode])))]
-;    (j/cell= (assert (and (coll? c)
-;                          (every? valid-locale? c)))))))
-; (def user-locale (user-locale-cell))
-; (def supported-user-locale
-;  (j/cell=
-;   (if-not env.data/testing?
-;    (langcodes->supported-langcode user-locale)
-;    ; Hardcode the locale to en-AU in testing environments so that CI doesn't
-;    ; become a PITA to configure.
-;    "en-AU")))
-
-(def supported-user-locale (atom "en"))
 
 ; TESTS.
 
