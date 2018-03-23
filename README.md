@@ -202,10 +202,13 @@ Default is `0`, max is `:max-fraction-digits`.
 
 CANNOT be combined with `:min-fraction-digits`.
 
+Applies rounding to truncated values.
+
 ```clojure
 (format (/ 10 3) :significant-digits 3) ; "3.33"
 (format (/ 1 3) :significant-digits 3) ; "0.333"
 (format 1.2 :significant-digits 3) ; "1.2"
+(format (/ 2 3) :significant-digits 3) ; "0.667"
 ```
 
 `trailing-zeros?`

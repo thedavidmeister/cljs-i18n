@@ -154,6 +154,7 @@
  ; significant digits
  (is (= "3.33" (format (/ 10 3) :significant-digits 3)))
  (is (= "0.333" (format (/ 1 3) :significant-digits 3)))
+ (is (= "0.667" (format (/ 2 3) :significant-digits 3)))
  (is (= "1.2" (format 1.2 :significant-digits 3)))
  (is (= "1.20" (format 1.2 :significant-digits 3 :trailing-zeros? true))))
 
