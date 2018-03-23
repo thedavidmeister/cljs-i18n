@@ -58,14 +58,6 @@
    (taoensso.timbre/warn (str "Can't fix locale: " locale))
    i18n.data/default-locale)))
 
-; https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Accept-Language
-; (def accept-language
-;  (let [c (j/cell nil)]
-;   (ajax.core/GET
-;    (str "//" wire.data/back-host "/i18n/locale/accept-language")
-;    {:handler #(reset! c %)})
-;   (hoplon.storage-atom.local-storage c ::accept-language)))
-
 (defn accept-language->locales
  "Turns a raw accept-language string into a seq of locales."
  [accept-language]

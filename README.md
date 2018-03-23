@@ -241,6 +241,31 @@ https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Accept-Language
 
 The output sequence is ordered by "quality" scores from the header string.
 
+This header contains the most detailed, reliable and relevant user configuration
+available in the browser, provided you can actually get at it.
+
+As far as I know, there is no way to get at an `Accept-Language` header with raw
+JavaScript. Based on my testing and research both the `XMLHttpRequest()` and
+`fetch()` APIs won't make this header available for inspection.
+
+The only way to get at this header is to read a request from the server and
+return the header string in the server response.
+
+If you don't have a server, this snippet will return `Accept-Language` strings
+from any request to a free tier endpoint from [Webtask IO](https://webtask.io/):
+
+```javascript
+/**
+* @param context {WebtaskContext}
+*/
+module.exports = function(context, cb) {
+  cb(null, context.headers['accept-language'] || context.headers['Accept-Language']);
+};
+```
+
+Make sure to save any fetched headers in local/session storage to avoid spamming
+round trips to the server for redundant locale information.
+
 `i18n.locale/system-locale`
 
 Attempts to detect the user's preferred locale from the browser or OS.
