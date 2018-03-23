@@ -6,6 +6,56 @@
 
 ## Overview
 
+### Public API quick reference
+
+#### i18n.locale
+
+`i18n.locale/valid-locale?`
+
+Takes a string and returns `true` if it looks like an ISO locale.
+
+`i18n.locale/fix-locale`
+
+Takes a string and attempts to hammer it into an ISO locale.
+
+`i18n.locale/supported-locale`
+
+Takes a string or seq and returns the best match from supported locales.
+
+`i18n.locale/accept-language->locales`
+
+Takes an `Accept-Language` header string and converts to a seq of locales.
+
+`i18n.locale/browser-locale`
+
+Attempts to detect the user's preferred locale from the browser or OS.
+
+#### i18n.datetime
+
+`i18n.datetime/timezone`
+
+Takes a tz string and returns a `goog.i18n.TimeZone`.
+
+`i18n.datetime/parse`
+
+Takes a string and optional `:locale` and returns a `js/Date`.
+
+`i18n.datetime/format`
+
+Takes a `js/Date`, optional `:locale`, `:pattern` and `:tz`. Returns a string.
+
+### i18n.number
+
+`i18n.number/parse`
+
+Takes a string and optional `:locale` and returns a `number`.
+
+`i18n.number/format`
+
+Takes a `number`, optional `:locale`, `:pattern` and config. Returns a string.
+
+### Explanation
+
 Google Closure `goog.i18n` is a wrapper for the Unicode CLDR data `goog.i18n` that provides localisation logic for:
 
 - Datetime/Timezone formatting and parsing
@@ -142,6 +192,9 @@ The public API consists of 2 fns:
 Both take a number/string to be formatted/parsed as the first arg and optional
 k/v pairs for other options.
 
+Uncached versions `i18n.number/-format` and `i18n.number/-parse` are available
+if memory pressure is a concern.
+
 See `i18n.number` tests for examples of both.
 
 ### Shared options
@@ -253,9 +306,9 @@ Default is `""`.
 
 String to return for `##NaN`.
 
-Default is `""`.
+Default is `"NaN"`.
 
 ```clojure
-(format ##NaN) ; ""
+(format ##NaN) ; "NaN"
 (format ##NaN :nan-string "-") ; "-"
 ```
