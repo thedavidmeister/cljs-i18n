@@ -160,7 +160,7 @@ https://github.com/google/closure-library/blob/master/closure/goog/i18n/numberfo
 
 Format has a few extra options not available to parse.
 
-See `i18n.number/??format--fraction-digits` for more examples.
+See `i18n.number` tests for more examples.
 
 `:min-fraction-digits`
 
