@@ -134,6 +134,8 @@
 ;    ; become a PITA to configure.
 ;    "en-AU")))
 
+(def supported-user-locale (atom "en"))
+
 ; TESTS.
 
 (deftest ??valid-langcode

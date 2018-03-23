@@ -70,13 +70,13 @@
               min-fraction-digits
               max-fraction-digits
               trailing-zeros?]}]
- {:pre [(or (nil? n) (number? n) (wheel.math.number/nan? n))
+ {:pre [(or (nil? n) (number? n)) ; (wheel.math.number/nan? n))
         (or (nil? locale) (string? locale))]
   :post [(string? %)]}
  (let [locale (or locale @i18n.locale/supported-user-locale)]
   (cond
    (nil? n) nil-string
-   (wheel.math.number/nan? n) NaN-string
+   ; (wheel.math.number/nan? n) NaN-string
    :else
    (do
     (i18n.goog/set-locale! locale)
@@ -153,43 +153,43 @@
     (is (-> b (format :locale l) (parse :locale l) (= b))
         (str "Failed to round trip " l "."))))))
 
-(deftest ??parse-examples
- (let [s (j/cell "")
-       l (j/cell "en")
-       p (parse-cell s :locale l)
-       ; Some strings that should evaluate to NaN.
-       NaNs ["" "banana" "a1" "-" "NaN"]
-       parse-me ["1"
-                 "1.0"
-                 "1,0"
-                 "1a"
-                 "1,000"
-                 "1,00,0"
-                 "1,000,000"
-                 "1,000.00"
-                 "1.000"
-                 "1.00.0"
-                 "1.000.000"
-                 "1.000,00"]
-       test-parsing (fn [es]
-                     (is (= (count es) (count parse-me)))
-                     (doseq [[e s'] (map vector es parse-me)]
-                      (reset! s s')
-                      (is (= e @p))))]
-
-  ; Empty string cannot parse to a number.
-  (doseq [n NaNs]
-   (reset! s n))
-   ; (is (wheel.math.number/nan? @p)))
-
-  (reset! l "en")
-  (test-parsing [1 1 10 1 1000 1000 1000000 1000 1 1 1 1])
-
-  (reset! l "en-IN")
-  (test-parsing [1 1 10 1 1000 1000 1000000 1000 1 1 1 1])
-
-  (reset! l "gl")
-  (test-parsing [1 10 1 1 1 1 1 1 1000 1000 1000000 1000])))
+; (deftest ??parse-examples
+;  (let [s (j/cell "")
+;        l (j/cell "en")
+;        p (parse-cell s :locale l)
+;        ; Some strings that should evaluate to NaN.
+;        NaNs ["" "banana" "a1" "-" "NaN"]
+;        parse-me ["1"
+;                  "1.0"
+;                  "1,0"
+;                  "1a"
+;                  "1,000"
+;                  "1,00,0"
+;                  "1,000,000"
+;                  "1,000.00"
+;                  "1.000"
+;                  "1.00.0"
+;                  "1.000.000"
+;                  "1.000,00"]
+;        test-parsing (fn [es]
+;                      (is (= (count es) (count parse-me)))
+;                      (doseq [[e s'] (map vector es parse-me)]
+;                       (reset! s s')
+;                       (is (= e @p))))]
+;
+;   ; Empty string cannot parse to a number.
+;   (doseq [n NaNs]
+;    (reset! s n))
+;    ; (is (wheel.math.number/nan? @p)))
+;
+;   (reset! l "en")
+;   (test-parsing [1 1 10 1 1000 1000 1000000 1000 1 1 1 1])
+;
+;   (reset! l "en-IN")
+;   (test-parsing [1 1 10 1 1000 1000 1000000 1000 1 1 1 1])
+;
+;   (reset! l "gl")
+;   (test-parsing [1 10 1 1 1 1 1 1 1000 1000 1000000 1000])))
 
 ; (deftest ??format-examples
 ;  (let [n (j/cell nil)

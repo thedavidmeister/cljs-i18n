@@ -23,18 +23,18 @@
     formats
     format-or-pattern))))
 
-; (let [fs (j/cell #{})
-;       current-locale (j/cell nil)]
-;  (defn register-locale-cb! [f]
-;   (swap! fs conj f))
-;
-;  (defn deregister-locale-cb! [f]
-;   (swap! fs disj f))
-;
-;  (defn set-locale! [locale]
-;   (when-not (= @current-locale locale)
-;    (doseq [f @fs] (f locale))
-;    (reset! current-locale locale))))
+(let [fs (atom #{})
+      current-locale (atom nil)]
+ (defn register-locale-cb! [f]
+  (swap! fs conj f))
+
+ (defn deregister-locale-cb! [f]
+  (swap! fs disj f))
+
+ (defn set-locale! [locale]
+  (when-not (= @current-locale locale)
+   (doseq [f @fs] (f locale))
+   (reset! current-locale locale))))
 
 ; TESTS.
 
