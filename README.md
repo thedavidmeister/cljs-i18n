@@ -216,9 +216,29 @@ Is aware of `valid-locale?` edge cases like `"sr-Latn"` (see above).
 
 Takes a string or seq and returns the best match from supported locales.
 
+Supports both `Accept-Language` header and singular locale strings (see below).
+
+Sequences of locales are supported.
+
+Nested structures are NOT supported.
+
+Tries pretty hard to find a match for each candidate locale:
+
+- `nil` falls back to default locale
+- Sequences and accept headers are processed in order
+- Munged locales are fixed as per `fix-locale` (see above)
+- First match against supported locales is returned
+- If there are no matches in the whole sequence, all country codes are stripped
+
 `i18n.locale/accept-language->locales`
 
 Takes an `Accept-Language` header string and converts to a seq of locales.
+
+Parses the string according to the rules documented at:
+
+https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Accept-Language
+
+The output sequence is ordered by "quality" scores from the header string.
 
 `i18n.locale/browser-locale`
 

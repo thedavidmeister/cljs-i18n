@@ -110,17 +110,26 @@
   i18n.data/default-locale
   (let [ls (if (string? locale)
             (accept-language->locales locale)
-            locale)]
-   (loop [[l & ls'] ls]
-    (if (string? l)
-     (let [fixed (fix-locale l)]
-      (if (contains? i18n.data/locales fixed)
-       fixed
-       (let [[lang _] (clojure.string/split fixed "-")]
-        (if (contains? i18n.data/locales lang)
-         lang
-         (recur ls')))))
-     i18n.data/default-locale)))))
+            locale)
+        loop-fn
+        (fn [ls]
+         (loop [[l & ls'] ls]
+          (when (string? l)
+           (let [fixed (fix-locale l)]
+            (if (contains? i18n.data/locales fixed)
+             fixed
+             (recur ls'))))))]
+   (or
+    ; first pass against the full locales
+    (loop-fn ls)
+    ; second pass against langcodes only, drop countries
+    (loop-fn
+     (map
+      (fn [l]
+       (first (clojure.string/split l "-")))
+      ls))
+    ; fallback to default
+    i18n.data/default-locale))))
 
 (defn navigator-language
  []
@@ -211,7 +220,9 @@
   ; should be able to pick locales out of accept strings
   "fr;q=0.5, zh;q=0.9" "zh"
   "fr;q=0.6, zh;q=0.3" "fr"
-  ; French - Hong Kong doesn't exist, but French does so we should use that
-  "fr-HK;q=0.6, zh-HK;q=0.3" "fr"
+  ; French - Hong Kong doesn't exist, but Chinese - Hong Kong does
+  "fr-HK;q=0.6, zh-HK;q=0.3" "zh-HK"
+  ; French - Hong Kong doesn't exist, neither does asdf
+  "fr-HK;q=0.6, asdf;q=0.3" "fr"
   ; no support for nested structures
   [["fr"]] "en"))
