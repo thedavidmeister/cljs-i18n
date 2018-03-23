@@ -160,14 +160,15 @@ https://github.com/google/closure-library/blob/master/closure/goog/i18n/numberfo
 
 Format has a few extra options not available to parse.
 
+See `i18n.number/??format--fraction-digits` for more examples.
+
 `:min-fraction-digits`
 
-Minimum number of digits to allow for fractions. Defaults to `0`.
+Integer minimum number of digits to allow for fractions.
+
+Default is `0`, max is `:max-fraction-digits` (see below).
 
 Fills out missing digits with trailing zeros.
-
-Providing a `:min-fraction-digits` greater than `:max-fraction-digits` throws an
-error (see below).
 
 ```clojure
 (format 1) ; "1"
@@ -176,16 +177,36 @@ error (see below).
 
 `:max-fraction-digits`
 
-Maximum number of digits to allow for fractions. Defaults to `1`.
+Integer maximum number of digits to allow for fractions.
+
+Default is `3`, max is `308`.
+
+Does NOT fill out missing digits with trailing zeros.
+
+Rounds truncated values.
 
 ```clojure
-(format (/ 1 3)) ; "1.3"
+(format (/ 1 3)) ; "1.333"
 (format (/ 1 3) :max-fraction-digits 1) ; "1.3"
 (format (/ 1 3) :max-fraction-digits 2) ; "1.33"
 (format (/ 1 3) :max-fraction-digits 3) ; "1.333"
+(format 1 :max-fraction-digits 3) ; "1"
+(format 1.5678) ; "1.568"
 ```
 
+`:significant-digits`
+
+Integer number of significant digits for the formatted number.
+
+Default is `0`, max is `:max-fraction-digits`.
+
+CANNOT be combined with `:min-fraction-digits`.
+
 `trailing-zeros?`
+
+Boolean to show trailing zeros if `:significant-digits` is set.
+
+Has no effect on `:min-fraction-digits` or `:max-fraction-digits`.
 
 `nil-string`
 

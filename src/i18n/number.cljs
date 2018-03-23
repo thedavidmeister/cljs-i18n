@@ -16,11 +16,6 @@
   i18n.locale
   i18n.data))
 
-; Limits displayed digits after the decimal point.
-(def default-max-fraction-digits 1)
-(def default-min-fraction-digits 0)
-(def default-trailing-zeros false)
-
 ; When passed nil instead of a number, what string to return?
 (def default-nil-string "")
 ; When passed NaN instead of a number, what string to return?
@@ -53,18 +48,21 @@
 (defn formatter
  [& {:keys [max-fraction-digits
             min-fraction-digits
+            significant-digits
             trailing-zeros?]}]
- (let [max-fraction-digits (or max-fraction-digits default-max-fraction-digits)
-       min-fraction-digits (or min-fraction-digits default-min-fraction-digits)
-       trailing-zeros? (or trailing-zeros? default-trailing-zeros)]
-  (i18n.goog/formatter
-   #(doto (goog.i18n.NumberFormat. %)
-     ; Limits digits after the decimal point.
-     (.setMaximumFractionDigits max-fraction-digits)
-     (.setMinimumFractionDigits min-fraction-digits)
-     ; Enforce trailing zeros when significant figures is set?
-     (.setShowTrailingZeros trailing-zeros?))
-   formats)))
+ (i18n.goog/formatter
+  (fn [pattern]
+   (let [number-format (goog.i18n.NumberFormat. pattern)]
+    (when (integer? min-fraction-digits)
+     (.setMinimumFractionDigits number-format min-fraction-digits))
+    (when (integer? max-fraction-digits)
+     (.setMaximumFractionDigits number-format max-fraction-digits))
+    (when (integer? significant-digits)
+     (.setSignificantDigits number-format significant-digits))
+    (when (some? trailing-zeros?)
+     (.setShowTrailingZeros number-format trailing-zeros?))
+    number-format))
+  formats))
 
 (def parser formatter)
 
@@ -75,6 +73,7 @@
               pattern
               min-fraction-digits
               max-fraction-digits
+              significant-digits
               trailing-zeros?
               nil-string
               nan-string]}]
@@ -94,6 +93,7 @@
      ((formatter
        :min-fraction-digits min-fraction-digits
        :max-fraction-digits max-fraction-digits
+       :significant-digits significant-digits
        :trailing-zeros? trailing-zeros?)
       (or pattern default-pattern))
      n)))))
@@ -115,21 +115,35 @@
 
 (deftest ??format--fraction-digits
  (let [n (/ 1 3)]
-  (is (= "0.3" (format n)))
+  (is (= "0.333" (format n)))
   (is (= "0.3" (format n :max-fraction-digits 1)))
-  (is (= "0.33" (format n :max-fraction-digits 2))))
+  (is (= "0.33" (format n :max-fraction-digits 2)))
 
- (let [n 1]
-  (is (= "1" (format n)))
-  (is (= "1.0" (format n :min-fraction-digits 1))))
-
- (let [n (/ 1 3)]
+  ; mix max and min
   (is
-   (= 
+   (=
     "Min value must be less than max value"
     (try (format n :min-fraction-digits 2 :max-fraction-digits 1)
      (catch js/Error e
-      (.-message e)))))))
+      (.-message e)))))
+  (is (= "0.33" (format n :min-fraction-digits 1 :max-fraction-digits 2)))
+  (is (= "0.33" (format n :min-fraction-digits 2 :max-fraction-digits 2))))
+
+ (let [n 1]
+  (is (= "1" (format n)))
+  (is (= "1.0" (format n :min-fraction-digits 1)))
+  ; :max-fraction-digits does not fill with trailing zeros
+  (is (= "1" (format n :max-fraction-digits 5)))
+
+  ; trailing-zeros? has no effect on :min-fraction-digits
+  (is (= "1.0" (format n :min-fraction-digits 1 :trailing-zeros? false)))
+  ; trailing-zeros? has no effect on :max-fraction-digits
+  (is (= "1" (format n :max-fraction-digits 2 :trailing-zeros? false)))
+
+  ; rounding
+  (let [n 1.5678]
+   ; :max-fraction-digits rounds values
+   (is (= "1.568" (format n))))))
 
 (deftest ??locale->symbols
  (is (identical? goog.i18n.NumberFormatSymbols_en_AU (locale->symbols "en-AU")))
@@ -213,10 +227,10 @@
                          (is (= e (format n :locale l)))))]
 
   (taoensso.timbre/debug "Test formatting in en locale")
-  (test-formatting "en" ["0" "0.1" "1" "1.1" "1.1" "1.1" "1.1" "2" "2" "1.9" "1.5" "-1" "1" "10" "100" "1,000" "10,000" "1,000,000" "1,000,000,000"])
+  (test-formatting "en" ["0" "0.1" "1" "1.1" "1.11" "1.111" "1.123" "1.987" "1.98" "1.9" "1.5" "-1" "1" "10" "100" "1,000" "10,000" "1,000,000" "1,000,000,000"])
 
   (taoensso.timbre/debug "Test formatting in en-IN locale")
-  (test-formatting "en-IN" ["0" "0.1" "1" "1.1" "1.1" "1.1" "1.1" "2" "2" "1.9" "1.5" "-1" "1" "10" "100" "1,000" "10,000" "10,00,000" "1,00,00,00,000"])
+  (test-formatting "en-IN" ["0" "0.1" "1" "1.1" "1.11" "1.111" "1.123" "1.987" "1.98" "1.9" "1.5" "-1" "1" "10" "100" "1,000" "10,000" "10,00,000" "1,00,00,00,000"])
 
   (taoensso.timbre/debug "Test formatting in gl locale")
-  (test-formatting "gl" ["0" "0,1" "1" "1,1" "1,1" "1,1" "1,1" "2" "2" "1,9" "1,5" "-1" "1" "10" "100" "1.000" "10.000" "1.000.000" "1.000.000.000"])))
+  (test-formatting "gl" ["0" "0,1" "1" "1,1" "1,11" "1,111" "1,123" "1,987" "1,98" "1,9" "1,5" "-1" "1" "10" "100" "1.000" "10.000" "1.000.000" "1.000.000.000"])))
