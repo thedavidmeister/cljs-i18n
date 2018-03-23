@@ -45,14 +45,20 @@ jobs:
       - run: boot deploy
 
 # https://circleci.com/docs/2.0/deployment-integrations/
-# workflows:
-#   version: 2
-#   build-and-deploy:
-#     jobs:
-#       - build
-#       - deploy:
-#         requires:
-#           - build
-#         filters:
-#           branches:
-#             only: master
+workflows:
+  version: 2
+  build:
+    jobs:
+      - build:
+        filters:
+          branches:
+            not: master
+  deploy-master-after-build:
+    jobs:
+      - build
+      - deploy:
+        requires:
+          - build
+        filters:
+          branches:
+            only: master
