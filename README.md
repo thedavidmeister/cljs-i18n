@@ -1,5 +1,11 @@
 # cljs-i18n
 
+## Install
+
+[![Clojars Project](https://img.shields.io/clojars/v/thedavidmeister/cljs-i18n.svg)](https://clojars.org/thedavidmeister/cljs-i18n)
+
+## Overview
+
 Google Closure `goog.i18n` is a wrapper for the Unicode CLDR data `goog.i18n` that provides localisation logic for:
 
 - Datetime/Timezone formatting and parsing
