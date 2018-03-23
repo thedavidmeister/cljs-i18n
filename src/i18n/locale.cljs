@@ -161,7 +161,9 @@
  (is (= [:default] (remove valid-locale? (keys i18n.data/locales)))))
 
 (deftest ??fix-locale
- (are [l e] (= e (fix-locale l))
+ (are [l e] (and
+             (= e (fix-locale l))
+             (valid-locale? (fix-locale l)))
   ; already valid
   "en" "en"
   "sr-Latn" "sr-Latn"

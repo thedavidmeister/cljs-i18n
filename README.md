@@ -205,6 +205,13 @@ considered valid.
 
 Takes an invalid locale string and attempts to hammer it into an ISO locale.
 
+Can fix:
+
+- Invalid case
+- Delimited by `_`
+
+Is aware of `valid-locale?` edge cases like `"sr-Latn"` (see above).
+
 `i18n.locale/supported-locale`
 
 Takes a string or seq and returns the best match from supported locales.
