@@ -377,11 +377,14 @@ Default is `""`.
 
 String to return for `##NaN`.
 
-Default is `"NaN"`.
+Default is a localised version of `"NaN"`.
 
 ```clojure
 (format ##NaN) ; "NaN"
+(format ##NaN :locale "fa") ; "ناعدد"
+
 (format ##NaN :nan-string "-") ; "-"
+(format ##NaN :nan-string "-" :locale "fa") ; "-"
 ```
 
 ## i18n.datetime - Datetime format, parse and timezones

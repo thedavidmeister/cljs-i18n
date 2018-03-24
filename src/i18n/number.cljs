@@ -90,11 +90,14 @@
         (or (nil? locale) (string? locale))]
   :post [(string? %)]}
  (let [locale (or locale i18n.data/default-locale)
-       nil-string (or nil-string default-nil-string)
-       nan-string (or nan-string default-nan-string)]
+       nil-string (or nil-string default-nil-string)]
   (cond
-   (nil? n) nil-string
-   (nan? n) nan-string
+   (nil? n)
+   nil-string
+
+   (and nan-string (nan? n))
+   nan-string
+
    :else
    (do
     (i18n.goog/set-locale! locale)
@@ -269,4 +272,7 @@
 
 (deftest ??format--nan
  (is (= "NaN" (format ##NaN)))
+ (is (= "ناعدد" (format ##NaN :locale "fa")))
+
+ (is (= "z" (format ##NaN :nan-string "z" :locale "fa")))
  (is (= "z" (format ##NaN :nan-string "z"))))
