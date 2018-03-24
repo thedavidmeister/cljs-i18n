@@ -58,20 +58,20 @@
   (set! goog.i18n.DateTimePatterns (locale->patterns locale))))
 
 (defn formatter
- [& {:keys [enforce-ascii-digits]}]
+ [& {:keys [ascii?]}]
  (i18n.goog/formatter
   (fn [pattern]
    ; setEnforceAsciiDigits must be called before constructing a formatter
-   (goog.i18n.DateTimeFormat.setEnforceAsciiDigits (boolean enforce-ascii-digits))
+   (goog.i18n.DateTimeFormat.setEnforceAsciiDigits (boolean ascii?))
    (goog.i18n.DateTimeFormat. pattern))
   formats))
 
 (defn parser
- [& {:keys [enforce-ascii-digits]}]
+ [& {:keys [ascii?]}]
  (i18n.goog/formatter
   (fn [pattern]
    ; setEnforceAsciiDigits must be called before constructing a formatter
-   (goog.i18n.DateTimeFormat.setEnforceAsciiDigits (boolean enforce-ascii-digits))
+   (goog.i18n.DateTimeFormat.setEnforceAsciiDigits (boolean ascii?))
    (goog.i18n.DateTimeParse. pattern))
   formats))
 
@@ -92,14 +92,14 @@
  [d & {:keys [locale
               pattern
               tz
-              enforce-ascii-digits]}]
+              ascii?]}]
  {:post [(string? %)]}
  (i18n.goog/set-locale! (or locale i18n.data/default-locale))
  (let [pattern (pattern->common-pattern (or pattern default-pattern))
        tz (timezone (or tz :local))]
   (.format
    ((formatter
-     :enforce-ascii-digits enforce-ascii-digits)
+     :ascii? ascii?)
     pattern)
    d
    tz)))
@@ -109,13 +109,13 @@
  [s & {:keys [locale
               pattern
               strict?
-              enforce-ascii-digits]}]
+              ascii?]}]
  {:pre [(string? s)]
   :post [(instance? js/Date %)]}
  (i18n.goog/set-locale! (or locale i18n.data/default-locale))
  (let [pattern (pattern->common-pattern pattern)]
   (let [d (js/Date.)
-        p ((parser :enforce-ascii-digits enforce-ascii-digits) pattern)
+        p ((parser :ascii? ascii?) pattern)
         parse-method (if strict?
                       (goog.object/get p "strictParse")
                       (goog.object/get p "parse"))]
@@ -174,7 +174,7 @@
     :locale "ar"
     :tz 0
     :pattern :weekday-month-day-year-medium
-    :enforce-ascii-digits true)))
+    :ascii? true)))
 
  (??check-parse
   (parse
@@ -182,7 +182,7 @@
    :locale "ar"
    :tz 0
    :pattern :weekday-month-day-year-medium
-   :enforce-ascii-digits true)))
+   :ascii? true)))
 
 (deftest ??format
  (is (= "May 11, 1973" (format (js/Date. 106000000000) :locale "en-US" :tz 0)))
