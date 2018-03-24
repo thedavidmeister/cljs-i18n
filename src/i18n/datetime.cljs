@@ -66,7 +66,8 @@
 
 (defn -parse
  [s & {:keys [locale pattern]}]
- {:pre [(string? s) (string? locale)]}
+ {:pre [(string? s) (string? locale)]
+  :post [(instance? js/Date %)]}
  (let [locale (or locale i18n.data/default-locale)]
   (i18n.goog/set-locale! locale)
   (let [d (js/Date.)]
