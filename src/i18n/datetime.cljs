@@ -31,7 +31,7 @@
  (i18n.goog/locale->symbols-fn :i18n/date-time-symbols))
 
 (def locale->patterns
- (i18n.goog/locale->patterns-fn :i18n/date-time-patterns))
+ (i18n.goog/locale->symbols-fn :i18n/date-time-patterns))
 
 (i18n.goog/register-locale-cb!
  (fn [locale]
