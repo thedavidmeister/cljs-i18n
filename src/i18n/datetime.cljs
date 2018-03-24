@@ -3,6 +3,7 @@
   i18n.goog
   i18n.locale
   i18n.data
+  goog.i18n.DateTimePatterns
   goog.i18n.DateTimeSymbols
   goog.i18n.DateTimeFormat
   goog.i18n.DateTimeParse
@@ -26,6 +27,23 @@
   :medium-datetime (.-MEDIUM_DATETIME goog.i18n.DateTimeFormat.Format)
   :short-datetime (.-SHORT_DATETIME goog.i18n.DateTimeFormat.Format)})
 (def default-pattern :long-date)
+
+(defn pattern->common-pattern
+ [pattern]
+ (case pattern
+  :year-full (.-YEAR_FULL goog.i18n.DateTimePatterns)
+  :year-full-with-era (.-YEAR_FULL_WITH_ERA goog.i18n.DateTimePatterns)
+  :year-month-abbr (.-YEAR_MONTH_ABBR goog.i18n.DateTimePatterns)
+  :year-month-full (.-YEAR_MONTH_FULL goog.i18n.DateTimePatterns)
+  :month-day-abbr (.-MONTH_DAY_ABBR goog.i18n.DateTimePatterns)
+  :month-day-full (.-MONTH_DAY_FULL goog.i18n.DateTimePatterns)
+  :month-day-short (.-MONTH_DAY_SHORT goog.i18n.DateTimePatterns)
+  :month-day-medium (.-MONTH_DAY_MEDIUM goog.i18n.DateTimePatterns)
+  :month-day-year-medium (.-MONTH_DAY_YEAR_MEDIUM goog.i18n.DateTimePatterns)
+  :weekday-month-day-medium (.-WEEKDAY_MONTH_DAY_MEDIUM goog.i18n.DateTimePatterns)
+  :weekday-month-day-year-medium (.-WEEKDAY_MONTH_DAY_YEAR_MEDIUM goog.i18n.DateTimePatterns)
+  :day-abbr (.-DAY_ABBR goog.i18n.DateTimePatterns)
+  pattern))
 
 (def locale->symbols
  (i18n.goog/locale->symbols-fn :i18n/date-time-symbols))
@@ -65,10 +83,9 @@
  [d & {:keys [locale pattern tz]}]
  {:pre [(string? locale)]
   :post [(string? locale)]}
- (let [locale (or locale i18n.data/default-locale)
-       pattern (or pattern default-pattern)
+ (i18n.goog/set-locale! (or locale i18n.data/default-locale))
+ (let [pattern (pattern->common-pattern (or pattern default-pattern))
        tz (timezone (or tz :local))]
-  (i18n.goog/set-locale! locale)
   (.format
    ((formatter)
     pattern)
@@ -80,8 +97,8 @@
  [s & {:keys [locale pattern]}]
  {:pre [(string? s) (string? locale)]
   :post [(instance? js/Date %)]}
- (let [locale (or locale i18n.data/default-locale)]
-  (i18n.goog/set-locale! locale)
+ (i18n.goog/set-locale! (or locale i18n.data/default-locale))
+ (let [pattern (pattern->common-pattern pattern)]
   (let [d (js/Date.)]
    (.parse
     ((parser)
@@ -109,6 +126,25 @@
    (.getTimeZoneData (timezone -600))
    :keywordize-keys true)))
 
+(deftest ??common-pattern
+ (is (= "11" (format (js/Date. 106000000000) :locale "en-US" :tz 0 :pattern :day-abbr)))
+
+ (is (= "الجمعة، ١١ مايو، ١٩٧٣" (format (js/Date. 106000000000) :locale "ar" :tz 0 :pattern :weekday-month-day-year-medium)))
+ (is (= "جمعه ۱۱ مهٔ ۱۹۷۳" (format (js/Date. 106000000000) :locale "fa" :tz 0 :pattern :weekday-month-day-year-medium)))
+ (is (= "Fri, May 11, 1973" (format (js/Date. 106000000000) :locale "en" :tz 0 :pattern :weekday-month-day-year-medium)))
+
+ (let [check-parse (fn [p]
+                    (is
+                     (=
+                      [1973 5 11]
+                      [(.getFullYear p)
+                       (inc (.getMonth p))
+                       (.getDate p)])))]
+
+  (check-parse (parse "الجمعة، ١١ مايو، ١٩٧٣" :locale "ar" :tz 0 :pattern :weekday-month-day-year-medium))
+  (check-parse (parse "جمعه ۱۱ مهٔ ۱۹۷۳" :locale "fa" :tz 0 :pattern :weekday-month-day-year-medium))
+  (check-parse (parse "Fri, May 11, 1973" :locale "en" :tz 0 :pattern :weekday-month-day-year-medium))))
+
 (deftest ??format
  (is (= "May 11, 1973" (format (js/Date. 106000000000) :locale "en-US" :tz 0)))
  (is (= "11 May 1973" (format (js/Date. 106000000000) :locale "en-AU" :tz 0)))
@@ -131,12 +167,24 @@
    (format (js/Date. 106000000000) :locale "en-AU" :pattern :full-datetime :tz -600))))
 
 (deftest ??parse
- (=
-  #inst "1973-05-12T08:09:46.875-00:00"
-  (parse "May 12, 1973" :locale "en-US" :pattern :long-date))
- (=
-  #inst "2018-03-24T07:09:46.878-00:00"
-  (parse "5/11/73" :locale "en-US" :pattern :long-date)))
+ (let [p (parse "May 12, 1973" :locale "en-US" :pattern :long-date)]
+  (prn p)
+  (is
+   (=
+    [1973 5 12]
+    [(.getFullYear p)
+     (inc (.getMonth p))
+     (.getDate p)])))
+
+
+ (let [p (parse "5/11/73" :locale "en-US" :pattern :long-date)]
+  (is
+   (=
+    [2018 3 24]
+    [(.getFullYear p)
+     (inc (.getMonth p))
+     (.getDate p)]))))
+
 
 (deftest ??format-parse
  ; May 12 1973.
