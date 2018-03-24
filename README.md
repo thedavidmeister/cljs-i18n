@@ -6,56 +6,6 @@
 
 ## Overview
 
-### Public API quick reference
-
-#### i18n.locale
-
-`i18n.locale/valid-locale?`
-
-Takes a string and returns `true` if it looks like a locale we might support.
-
-`i18n.locale/fix-locale`
-
-Takes an invalid locale string and attempts to hammer it into an ISO locale.
-
-`i18n.locale/supported-locale`
-
-Takes a string or seq and returns the best match from supported locales.
-
-`i18n.locale/accept-language->locales`
-
-Takes an `Accept-Language` header string and converts to a seq of locales.
-
-`i18n.locale/system-locales`
-
-Attempts to detect the user's preferred locale from the browser or OS.
-
-#### i18n.datetime
-
-`i18n.datetime/timezone`
-
-Takes a tz string and returns a `goog.i18n.TimeZone`.
-
-`i18n.datetime/parse`
-
-Takes a string and optional `:locale` and returns a `js/Date`.
-
-`i18n.datetime/format`
-
-Takes a `js/Date`, optional `:locale`, `:pattern` and `:tz`. Returns a string.
-
-### i18n.number
-
-`i18n.number/parse`
-
-Takes a string and optional `:locale` and returns a `number`.
-
-`i18n.number/format`
-
-Takes a `number`, optional `:locale`, `:pattern` and config. Returns a string.
-
-### Explanation
-
 Google Closure `goog.i18n` is a wrapper for the Unicode CLDR data `goog.i18n` that provides localisation logic for:
 
 - Datetime/Timezone formatting and parsing
@@ -309,6 +259,8 @@ A CLDR number formatting pattern or one of the preconfigured formats as per
 `i18n.number/formats`. Currently supported formats: `:decimal`, `:scientific`,
 `:percent`, `:currency`, `:compact-short`, `:compact-long`.
 
+Default `:pattern` is `:decimal`.
+
 Official documentation for CLDR patterns:
 
 http://cldr.unicode.org/translation/number-patterns
@@ -412,3 +364,117 @@ Default is `"NaN"`.
 (format ##NaN) ; "NaN"
 (format ##NaN :nan-string "-") ; "-"
 ```
+
+## i18n.datetime - Datetime format, parse and timezones
+
+Both formatting and parsing of numbers is supported in `i18n.datetime`.
+
+The public API consists of 3 fns:
+
+- `i18n.datetime/format`
+- `i18n.datetime/parse`
+- `i18n.datetime/timezone`
+
+Format and parse take a number/string to be formatted/parsed as the first arg
+and optional k/v pairs for other options. They intentionally mirror the
+signatures of the `i18n.number` format and parse fns.
+
+Uncached versions `i18n.datetime/-format` and `i18n.datetime/-parse` are
+available if memory pressure is a concern.
+
+See `i18n.datetime` tests for examples.
+
+### Format/parse shared options
+
+`:locale`
+
+Any supported locale code (see above).
+
+`:pattern`
+
+A CLDR number formatting pattern or one of the preconfigured formats as per
+`i18n.datetime/formats`. Currently supported formats: `:full-date`,
+`:long-date`, `:medium-date`, `:short-date`, `:full-time`, `:long-time`,
+`:medium-time`, `:short-time`, `:full-datetime`, `:long-datetime`,
+`:medium-datetime`, `:short-datetime`.
+
+Default `:pattern` is `:long-date`.
+
+Official documentation for CLDR patterns:
+
+http://cldr.unicode.org/translation/date-time-patterns
+
+Example patterns:
+
+https://github.com/google/closure-library/blob/master/closure/goog/i18n/datetimepatterns.js
+
+### Formatting
+
+Takes a `js/Date` or a compatible Date object, e.g. `goog.date.DateTime` and
+returns a formatted string.
+
+```clojure
+(format (js/Date. 106000000000) :locale "en-US" :tz 0) ; "May 11, 1973"
+(format (js/Date. 106000000000) :locale "en-AU" :tz 0) ; "11 May 1973"
+
+(format (js/Date. 106000000000) :locale "en-US" :pattern :short-time :tz 0) ; "8:26 PM"
+(format (js/Date. 106000000000) :locale "en-AU" :pattern :short-time :tz 0) ; "8:26 pm"
+
+(format (js/Date. 106000000000) :locale "en-US" :pattern :full-datetime :tz 0) ; "Friday, May 11, 1973 at 8:26:40 PM UTC"
+(format (js/Date. 106000000000) :locale "en-AU" :pattern :full-datetime :tz 0) ; "Friday, 11 May 1973 at 8:26:40 pm UTC"
+```
+
+`i18n.datetime/format` takes an optional `:tz` parameter. The value of
+`:tz` will be passed to `i18n.datetime/timezone` before use in the formatter.
+The timezone handling in `goog.i18n.TimeZone` works like `js/Date` methods, in
+that it is an _offset_, i.e. negative minutes (see below).
+
+The default `:tz` is `:local`, i.e. `(.getTimezoneOffset (js/Date.))`.
+
+```clojure
+(format (js/Date. 106000000000) :locale "en-AU" :pattern :full-datetime :tz 0) ; "Friday, 11 May 1973 at 8:26:40 pm UTC"
+(format (js/Date. 106000000000) :locale "en-AU" :pattern :full-datetime :tz -600) ; "Saturday, 12 May 1973 at 6:26:40 am UTC+10"
+```
+
+### Parsing
+
+Takes a date string and attempts to parse to a `js/Date` instant.
+
+**You MUST provide a pattern AND a locale for date parsing to work.**
+
+If no `:pattern` is provided an error will be thrown, but if a `:pattern` is
+provided that does not match the structure of the date string, the parser will
+silently fallback to "now" in the returned date.
+
+```clojure
+(parse "May 12, 1973" :locale "en-US" :pattern :long-date) ; #inst "1973-05-12T08:00:54.428-00:00" - SUCCESS!
+(parse "5/11/73" :locale "en-US" :pattern :long-date) ; #inst "2018-03-24T07:00:54.425-00:00" - FAIL!
+```
+
+### Timezones
+
+The `i18n.datetime/timezone` fn is a thin wrapper around Google Closure's own
+i18n timezone handling.
+
+Numeric values are treated as a simple offset in negative minutes, e.g. `UTC+10`
+hours would be `-600` in goog. This is compatible with the timezone offset API
+provided by native JS.
+
+To get the current offset in the browser, pass `:local` to
+`i18n.datetime/timezone` or call `(.getTimezoneOffset (js/Date.))`.
+
+Numeric values do not support daylight savings. For DST support a JS object must
+be provided outlining all the details of the timezone.
+
+Google strongly recommends serving `timeZoneData` objects from the server as
+needed rather than shipping the full set of global timezones to the client. If
+only a few timezones are required and can be specified ahead of time, they can
+be set statically in client code.
+
+Documentation for `timeZoneData` objects:
+
+https://github.com/google/closure-library/blob/master/closure/goog/i18n/timezone.js#L144
+
+Examples of `timeZoneData` objects:
+
+https://github.com/google/closure-library/blob/master/closure/goog/i18n/timezone_test.js#L29
