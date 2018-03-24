@@ -28,7 +28,7 @@
 (def default-pattern :long-date)
 
 (def locale->symbols
- (i18n.goog/locale->symbols-fn :date-time-symbols))
+ (i18n.goog/locale->symbols-fn :i18n/date-time-symbols))
 
 (i18n.goog/register-locale-cb!
  #(set! goog.i18n.DateTimeSymbols (locale->symbols %)))
