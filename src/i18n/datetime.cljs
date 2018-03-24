@@ -30,8 +30,13 @@
 (def locale->symbols
  (i18n.goog/locale->symbols-fn :i18n/date-time-symbols))
 
+(def locale->patterns
+ (i18n.goog/locale->patterns-fn :i18n/date-time-patterns))
+
 (i18n.goog/register-locale-cb!
- #(set! goog.i18n.DateTimeSymbols (locale->symbols %)))
+ (fn [locale]
+  (set! goog.i18n.DateTimeSymbols (locale->symbols locale))
+  (set! goog.i18n.DateTimePatterns (locale->patterns locale))))
 
 (defn formatter []
  (i18n.goog/formatter
