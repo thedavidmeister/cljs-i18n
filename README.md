@@ -279,7 +279,7 @@ Example patterns:
 
 https://github.com/google/closure-library/blob/master/closure/goog/i18n/numberformatsymbols.js
 
-`:enforce-ascii-digits`
+`:ascii?`
 
 Boolean to use only ascii digits in the output.
 
@@ -289,7 +289,7 @@ Parsing is also influenced by the ascii digit configuration.
 
 ```clojure
 (format 1000000 :locale "fa") ; "۱٬۰۰۰٬۰۰۰"
-(format 1000000 :locale "fa" :enforce-ascii-digits true) ; "1,000,000"
+(format 1000000 :locale "fa" :ascii? true) ; "1,000,000"
 ```
 
 ### Parsing
@@ -445,7 +445,7 @@ Example patterns:
 
 https://github.com/google/closure-library/blob/master/closure/goog/i18n/datetimepatterns.js
 
-`:enforce-ascii-digits`
+`:ascii?`
 
 Boolean to use only ascii digits in the output.
 
@@ -460,13 +460,13 @@ Parsing is also influenced by the ascii digit configuration.
   :tz 0
   :pattern
   :weekday-month-day-year-medium
-  :enforce-ascii-digits false) ; "الجمعة، ١١ مايو، ١٩٧٣"
+  :ascii? false) ; "الجمعة، ١١ مايو، ١٩٧٣"
 (format
  (js/Date. 106000000000)
  :locale "ar"
  :tz 0
  :pattern :weekday-month-day-year-medium
- :enforce-ascii-digits true) ; "الجمعة، 11 مايو، 1973"
+ :ascii? true) ; "الجمعة، 11 مايو، 1973"
 ```
 
 ### Formatting

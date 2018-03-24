@@ -55,11 +55,11 @@
             min-fraction-digits
             significant-digits
             trailing-zeros?
-            enforce-ascii-digits]}]
+            ascii?]}]
  (i18n.goog/formatter
   (fn [pattern]
    ; setEnforceAsciiDigits must be called before constructing a formatter
-   (goog.i18n.NumberFormat.setEnforceAsciiDigits (boolean enforce-ascii-digits))
+   (goog.i18n.NumberFormat.setEnforceAsciiDigits (boolean ascii?))
    (let [number-format (goog.i18n.NumberFormat. pattern)]
     (when (integer? min-fraction-digits)
      (.setMinimumFractionDigits number-format min-fraction-digits))
@@ -83,7 +83,7 @@
               max-fraction-digits
               significant-digits
               trailing-zeros?
-              enforce-ascii-digits
+              ascii?
               nil-string
               nan-string]}]
  {:pre [(or (nil? n) (number? n))
@@ -107,7 +107,7 @@
        :max-fraction-digits max-fraction-digits
        :significant-digits significant-digits
        :trailing-zeros? trailing-zeros?
-       :enforce-ascii-digits enforce-ascii-digits)
+       :ascii? ascii?)
       (or pattern default-pattern))
      n)))))
 (def format (memoize -format))
@@ -115,14 +115,14 @@
 (defn -parse
  [s & {:keys [locale
               pattern
-              enforce-ascii-digits]}]
+              ascii?]}]
  {:pre [(string? s) (or (nil? locale) (string? locale))]
   :post [(number? %)]}
  (let [locale (or locale i18n.data/default-locale)]
   (i18n.goog/set-locale! locale)
   (.parse
    ((parser
-     :enforce-ascii-digits enforce-ascii-digits)
+     :ascii? ascii?)
     (or pattern default-pattern))
    s)))
 (def parse (memoize -parse))
@@ -131,10 +131,10 @@
 
 (deftest ??format--ascii-digits
  (is (= "۱٬۰۰۰٬۰۰۰" (format 1000000 :locale "fa")))
- (is (= "1,000,000" (format 1000000 :locale "fa" :enforce-ascii-digits true)))
+ (is (= "1,000,000" (format 1000000 :locale "fa" :ascii? true)))
 
  (is (= 1000000 (parse "۱٬۰۰۰٬۰۰۰" :locale "fa")))
- (is (= 1000000 (parse "1,000,000" :locale "fa" :enforce-ascii-digits true))))
+ (is (= 1000000 (parse "1,000,000" :locale "fa" :ascii? true))))
 
 (deftest ??format--fraction-digits
  (let [n (/ 10 3)]
