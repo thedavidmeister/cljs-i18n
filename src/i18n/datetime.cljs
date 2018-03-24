@@ -55,13 +55,14 @@
  {:pre [(string? locale)]
   :post [(string? locale)]}
  (let [locale (or locale i18n.data/default-locale)
-       pattern (or pattern default-pattern)]
+       pattern (or pattern default-pattern)
+       tz (timezone (or tz 0))]
   (i18n.goog/set-locale! locale)
   (.format
    ((formatter)
     pattern)
    d
-   (when tz (timezone tz)))))
+   tz)))
 (def format (memoize -format))
 
 (defn -parse
@@ -98,19 +99,19 @@
    :keywordize-keys true)))
 
 (deftest ??format
- (is (= "May 12, 1973" (format (js/Date. 106000000000) :locale "en-US")))
- (is (= "12 May 1973" (format (js/Date. 106000000000) :locale "en-AU")))
+ (is (= "May 11, 1973" (format (js/Date. 106000000000) :locale "en-US")))
+ (is (= "11 May 1973" (format (js/Date. 106000000000) :locale "en-AU")))
 
- (is (= "6:26 AM" (format (js/Date. 106000000000) :locale "en-US" :pattern :short-time)))
- (is (= "6:26 am" (format (js/Date. 106000000000) :locale "en-AU" :pattern :short-time)))
+ (is (= "8:26 PM" (format (js/Date. 106000000000) :locale "en-US" :pattern :short-time)))
+ (is (= "8:26 pm" (format (js/Date. 106000000000) :locale "en-AU" :pattern :short-time)))
 
  (is
   (=
-   "Saturday, May 12, 1973 at 6:26:40 AM UTC+10"
+   "Friday, May 11, 1973 at 8:26:40 PM UTC"
    (format (js/Date. 106000000000) :locale "en-US" :pattern :full-datetime)))
  (is
   (=
-   "Saturday, 12 May 1973 at 6:26:40 am UTC+10"
+   "Friday, 11 May 1973 at 8:26:40 pm UTC"
    (format (js/Date. 106000000000) :locale "en-AU" :pattern :full-datetime)))
 
  (is

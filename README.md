@@ -414,14 +414,14 @@ Takes a `js/Date` or a compatible Date object, e.g. `goog.date.DateTime` and
 returns a formatted string.
 
 ```clojure
-(format (js/Date. 106000000000) :locale "en-US") ; "May 12, 1973"
-(format (js/Date. 106000000000) :locale "en-AU") ; "12 May 1973"
+(format (js/Date. 106000000000) :locale "en-US") ; "May 11, 1973"
+(format (js/Date. 106000000000) :locale "en-AU") ; "11 May 1973"
 
-(format (js/Date. 106000000000) :locale "en-US" :pattern :short-time) ; "6:26 AM"
-(format (js/Date. 106000000000) :locale "en-AU" :pattern :short-time) ; "6:26 am"
+(format (js/Date. 106000000000) :locale "en-US" :pattern :short-time) ; "8:26 PM"
+(format (js/Date. 106000000000) :locale "en-AU" :pattern :short-time) ; "8:26 pm"
 
-(format (js/Date. 106000000000) :locale "en-US" :pattern :full-datetime) ; "Saturday, May 12, 1973 at 6:26:40 AM UTC+10"
-(format (js/Date. 106000000000) :locale "en-AU" :pattern :full-datetime) ; "Saturday, 12 May 1973 at 6:26:40 am UTC+10"
+(format (js/Date. 106000000000) :locale "en-US" :pattern :full-datetime) ; "Friday, May 11, 1973 at 8:26:40 PM UTC"
+(format (js/Date. 106000000000) :locale "en-AU" :pattern :full-datetime) ; "Friday, 11 May 1973 at 8:26:40 pm UTC"
 ```
 
 `i18n.datetime/format` also takes an optional `:tz` parameter. The value of
@@ -429,7 +429,10 @@ returns a formatted string.
 The timezone handling in `goog.i18n.TimeZone` is somewhat counterintuitive so
 read their docs carefully (see below).
 
+The default `:tz` is UTC.
+
 ```clojure
+(format (js/Date. 106000000000) :locale "en-AU" :pattern :full-datetime) ; "Friday, 11 May 1973 at 8:26:40 pm UTC"
 (format (js/Date. 106000000000) :locale "en-AU" :pattern :full-datetime :tz -600) ; "Saturday, 12 May 1973 at 6:26:40 am UTC+10"
 ```
 
