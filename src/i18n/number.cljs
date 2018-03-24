@@ -113,13 +113,16 @@
 (def format (memoize -format))
 
 (defn -parse
- [s & {:keys [locale pattern]}]
+ [s & {:keys [locale
+              pattern
+              enforce-ascii-digits]}]
  {:pre [(string? s) (or (nil? locale) (string? locale))]
   :post [(number? %)]}
  (let [locale (or locale i18n.data/default-locale)]
   (i18n.goog/set-locale! locale)
   (.parse
-   ((parser)
+   ((parser
+     :enforce-ascii-digits enforce-ascii-digits)
     (or pattern default-pattern))
    s)))
 (def parse (memoize -parse))
@@ -128,7 +131,10 @@
 
 (deftest ??format--ascii-digits
  (is (= "۱٬۰۰۰٬۰۰۰" (format 1000000 :locale "fa")))
- (is (= "1,000,000" (format 1000000 :locale "fa" :enforce-ascii-digits true))))
+ (is (= "1,000,000" (format 1000000 :locale "fa" :enforce-ascii-digits true)))
+
+ (is (= 1000000 (parse "۱٬۰۰۰٬۰۰۰" :locale "fa")))
+ (is (= 1000000 (parse "1,000,000" :locale "fa" :enforce-ascii-digits true))))
 
 (deftest ??format--fraction-digits
  (let [n (/ 10 3)]

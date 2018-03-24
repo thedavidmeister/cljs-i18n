@@ -56,14 +56,22 @@
   (set! goog.i18n.DateTimeSymbols (locale->symbols locale))
   (set! goog.i18n.DateTimePatterns (locale->patterns locale))))
 
-(defn formatter []
+(defn formatter
+ [& {:keys [enforce-ascii-digits]}]
  (i18n.goog/formatter
-  #(goog.i18n.DateTimeFormat. %)
+  (fn [pattern]
+   ; setEnforceAsciiDigits must be called before constructing a formatter
+   (goog.i18n.DateTimeFormat.setEnforceAsciiDigits (boolean enforce-ascii-digits))
+   (goog.i18n.DateTimeFormat. pattern))
   formats))
 
-(defn parser []
+(defn parser
+ [& {:keys [enforce-ascii-digits]}]
  (i18n.goog/formatter
-  #(goog.i18n.DateTimeParse. %)
+  (fn [pattern]
+   ; setEnforceAsciiDigits must be called before constructing a formatter
+   (goog.i18n.DateTimeFormat.setEnforceAsciiDigits (boolean enforce-ascii-digits))
+   (goog.i18n.DateTimeParse. pattern))
   formats))
 
 ; PUBLIC API.
@@ -80,28 +88,35 @@
   (.createTimeZone goog.i18n.TimeZone v)))
 
 (defn -format
- [d & {:keys [locale pattern tz]}]
+ [d & {:keys [locale
+              pattern
+              tz
+              enforce-ascii-digits]}]
  {:pre [(string? locale)]
   :post [(string? locale)]}
  (i18n.goog/set-locale! (or locale i18n.data/default-locale))
  (let [pattern (pattern->common-pattern (or pattern default-pattern))
        tz (timezone (or tz :local))]
   (.format
-   ((formatter)
+   ((formatter
+     :enforce-ascii-digits enforce-ascii-digits)
     pattern)
    d
    tz)))
 (def format (memoize -format))
 
 (defn -parse
- [s & {:keys [locale pattern]}]
+ [s & {:keys [locale
+              pattern
+              enforce-ascii-digits]}]
  {:pre [(string? s) (string? locale)]
   :post [(instance? js/Date %)]}
  (i18n.goog/set-locale! (or locale i18n.data/default-locale))
  (let [pattern (pattern->common-pattern pattern)]
   (let [d (js/Date.)]
    (.parse
-    ((parser)
+    ((parser
+      :enforce-ascii-digits enforce-ascii-digits)
      pattern)
     s
     d)
@@ -126,6 +141,15 @@
    (.getTimeZoneData (timezone -600))
    :keywordize-keys true)))
 
+(defn ??check-parse
+ [p]
+ (is
+  (=
+   [1973 5 11]
+   [(.getFullYear p)
+    (inc (.getMonth p))
+    (.getDate p)])))
+
 (deftest ??common-pattern
  (is (= "11" (format (js/Date. 106000000000) :locale "en-US" :tz 0 :pattern :day-abbr)))
 
@@ -133,17 +157,28 @@
  (is (= "جمعه ۱۱ مهٔ ۱۹۷۳" (format (js/Date. 106000000000) :locale "fa" :tz 0 :pattern :weekday-month-day-year-medium)))
  (is (= "Fri, May 11, 1973" (format (js/Date. 106000000000) :locale "en" :tz 0 :pattern :weekday-month-day-year-medium)))
 
- (let [check-parse (fn [p]
-                    (is
-                     (=
-                      [1973 5 11]
-                      [(.getFullYear p)
-                       (inc (.getMonth p))
-                       (.getDate p)])))]
+ (??check-parse (parse "الجمعة، ١١ مايو، ١٩٧٣" :locale "ar" :tz 0 :pattern :weekday-month-day-year-medium))
+ (??check-parse (parse "جمعه ۱۱ مهٔ ۱۹۷۳" :locale "fa" :tz 0 :pattern :weekday-month-day-year-medium))
+ (??check-parse (parse "Fri, May 11, 1973" :locale "en" :tz 0 :pattern :weekday-month-day-year-medium)))
 
-  (check-parse (parse "الجمعة، ١١ مايو، ١٩٧٣" :locale "ar" :tz 0 :pattern :weekday-month-day-year-medium))
-  (check-parse (parse "جمعه ۱۱ مهٔ ۱۹۷۳" :locale "fa" :tz 0 :pattern :weekday-month-day-year-medium))
-  (check-parse (parse "Fri, May 11, 1973" :locale "en" :tz 0 :pattern :weekday-month-day-year-medium))))
+(deftest ??ascii-digits
+ (is
+  (=
+   "الجمعة، 11 مايو، 1973"
+   (format
+    (js/Date. 106000000000)
+    :locale "ar"
+    :tz 0
+    :pattern :weekday-month-day-year-medium
+    :enforce-ascii-digits true)))
+
+ (??check-parse
+  (parse
+   "الجمعة، 11 مايو، 1973"
+   :locale "ar"
+   :tz 0
+   :pattern :weekday-month-day-year-medium
+   :enforce-ascii-digits true)))
 
 (deftest ??format
  (is (= "May 11, 1973" (format (js/Date. 106000000000) :locale "en-US" :tz 0)))

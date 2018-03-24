@@ -279,6 +279,19 @@ Example patterns:
 
 https://github.com/google/closure-library/blob/master/closure/goog/i18n/numberformatsymbols.js
 
+`:enforce-ascii-digits`
+
+Boolean to use only ascii digits in the output.
+
+Default is `false`.
+
+Parsing is also influenced by the ascii digit configuration.
+
+```clojure
+(format 1000000 :locale "fa") ; "۱٬۰۰۰٬۰۰۰"
+(format 1000000 :locale "fa" :enforce-ascii-digits true) ; "1,000,000"
+```
+
 ### Parsing
 
 You should not typically need to set a pattern manually for `parse`, `:locale`
@@ -351,17 +364,6 @@ Has no effect on `:min-fraction-digits` or `:max-fraction-digits`.
 
 ```clojure
 (format 1.2 :significant-digits 3 :trailing-zeros? true) ; "1.20"
-```
-
-`:enforce-ascii-digits`
-
-Boolean to enforce only ascii digits in the output.
-
-Default is `false`.
-
-```clojure
-(format 1000000 :locale "fa") ; "۱٬۰۰۰٬۰۰۰"
-(format 1000000 :locale "fa" :enforce-ascii-digits true) ; "1,000,000"
 ```
 
 `nil-string`
@@ -442,6 +444,30 @@ http://cldr.unicode.org/translation/date-time-patterns
 Example patterns:
 
 https://github.com/google/closure-library/blob/master/closure/goog/i18n/datetimepatterns.js
+
+`:enforce-ascii-digits`
+
+Boolean to use only ascii digits in the output.
+
+Default is `false`.
+
+Parsing is also influenced by the ascii digit configuration.
+
+```clojure
+(format
+  (js/Date. 106000000000)
+  :locale "ar"
+  :tz 0
+  :pattern
+  :weekday-month-day-year-medium
+  :enforce-ascii-digits false) ; "الجمعة، ١١ مايو، ١٩٧٣"
+(format
+ (js/Date. 106000000000)
+ :locale "ar"
+ :tz 0
+ :pattern :weekday-month-day-year-medium
+ :enforce-ascii-digits true) ; "الجمعة، 11 مايو، 1973"
+```
 
 ### Formatting
 
