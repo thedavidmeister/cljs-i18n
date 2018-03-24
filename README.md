@@ -343,6 +343,17 @@ Has no effect on `:min-fraction-digits` or `:max-fraction-digits`.
 (format 1.2 :significant-digits 3 :trailing-zeros? true) ; "1.20"
 ```
 
+`:enforce-ascii-digits`
+
+Boolean to enforce only ascii digits in the output.
+
+Default is `false`.
+
+```clojure
+(format 1000000 :locale "fa") ; "۱٬۰۰۰٬۰۰۰"
+(format 1000000 :locale "fa" :enforce-ascii-digits true) ; "1,000,000"
+```
+
 `nil-string`
 
 String to return for `nil`.

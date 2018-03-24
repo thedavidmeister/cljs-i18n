@@ -42,16 +42,24 @@
 (def locale->symbols
  (i18n.goog/locale->symbols-fn :number-format-symbols))
 
+(def locale->latin-symbols
+ (i18n.goog/locale->symbols-fn :number-format-symbols-latin))
+
 (i18n.goog/register-locale-cb!
- #(set! goog.i18n.NumberFormatSymbols (locale->symbols %)))
+ (fn [locale]
+  (set! goog.i18n.NumberFormatSymbols (locale->symbols locale))
+  (set! goog.i18n.NumberFormatSymbols_u_nu_latn (locale->latin-symbols locale))))
 
 (defn formatter
  [& {:keys [max-fraction-digits
             min-fraction-digits
             significant-digits
-            trailing-zeros?]}]
+            trailing-zeros?
+            enforce-ascii-digits]}]
  (i18n.goog/formatter
   (fn [pattern]
+   ; setEnforceAsciiDigits must be called before constructing a formatter
+   (goog.i18n.NumberFormat.setEnforceAsciiDigits (boolean enforce-ascii-digits))
    (let [number-format (goog.i18n.NumberFormat. pattern)]
     (when (integer? min-fraction-digits)
      (.setMinimumFractionDigits number-format min-fraction-digits))
@@ -75,6 +83,7 @@
               max-fraction-digits
               significant-digits
               trailing-zeros?
+              enforce-ascii-digits
               nil-string
               nan-string]}]
  {:pre [(or (nil? n) (number? n))
@@ -94,7 +103,8 @@
        :min-fraction-digits min-fraction-digits
        :max-fraction-digits max-fraction-digits
        :significant-digits significant-digits
-       :trailing-zeros? trailing-zeros?)
+       :trailing-zeros? trailing-zeros?
+       :enforce-ascii-digits enforce-ascii-digits)
       (or pattern default-pattern))
      n)))))
 (def format (memoize -format))
@@ -112,6 +122,10 @@
 (def parse (memoize -parse))
 
 ; TESTS.
+
+(deftest ??format--ascii-digits
+ (is (= "۱٬۰۰۰٬۰۰۰" (format 1000000 :locale "fa")))
+ (is (= "1,000,000" (format 1000000 :locale "fa" :enforce-ascii-digits true))))
 
 (deftest ??format--fraction-digits
  (let [n (/ 10 3)]
