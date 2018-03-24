@@ -11,6 +11,7 @@
  (spec/keys
   :req [:i18n/number-format-symbols
         :i18n/number-format-symbols-latin
+        :i18n/number-format-symbols-compact
         :i18n/date-time-symbols
         :i18n/date-time-patterns
         :i18n/code]))
