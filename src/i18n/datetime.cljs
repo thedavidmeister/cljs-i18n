@@ -3,6 +3,7 @@
   i18n.goog
   i18n.locale
   i18n.data
+  goog.object
   goog.i18n.DateTimePatterns
   goog.i18n.DateTimeSymbols
   goog.i18n.DateTimeFormat
@@ -92,8 +93,7 @@
               pattern
               tz
               enforce-ascii-digits]}]
- {:pre [(string? locale)]
-  :post [(string? locale)]}
+ {:post [(string? %)]}
  (i18n.goog/set-locale! (or locale i18n.data/default-locale))
  (let [pattern (pattern->common-pattern (or pattern default-pattern))
        tz (timezone (or tz :local))]
@@ -108,18 +108,18 @@
 (defn -parse
  [s & {:keys [locale
               pattern
+              strict?
               enforce-ascii-digits]}]
- {:pre [(string? s) (string? locale)]
+ {:pre [(string? s)]
   :post [(instance? js/Date %)]}
  (i18n.goog/set-locale! (or locale i18n.data/default-locale))
  (let [pattern (pattern->common-pattern pattern)]
-  (let [d (js/Date.)]
-   (.parse
-    ((parser
-      :enforce-ascii-digits enforce-ascii-digits)
-     pattern)
-    s
-    d)
+  (let [d (js/Date.)
+        p ((parser :enforce-ascii-digits enforce-ascii-digits) pattern)
+        parse-method (if strict?
+                      (goog.object/get p "strictParse")
+                      (goog.object/get p "parse"))]
+   (.call parse-method p s d)
    d)))
 (def parse (memoize -parse))
 
@@ -142,13 +142,17 @@
    :keywordize-keys true)))
 
 (defn ??check-parse
- [p]
- (is
-  (=
-   [1973 5 11]
-   [(.getFullYear p)
-    (inc (.getMonth p))
-    (.getDate p)])))
+ ([p d]
+  (is
+   (=
+    [(.getFullYear d)
+     (inc (.getMonth d))
+     (.getDate d)]
+    [(.getFullYear p)
+     (inc (.getMonth p))
+     (.getDate p)])))
+ ([p]
+  (??check-parse p (doto (js/Date. 106000000000) (.setUTCHours 0)))))
 
 (deftest ??common-pattern
  (is (= "11" (format (js/Date. 106000000000) :locale "en-US" :tz 0 :pattern :day-abbr)))
@@ -202,23 +206,18 @@
    (format (js/Date. 106000000000) :locale "en-AU" :pattern :full-datetime :tz -600))))
 
 (deftest ??parse
- (let [p (parse "May 12, 1973" :locale "en-US" :pattern :long-date)]
-  (is
-   (=
-    [1973 5 12]
-    [(.getFullYear p)
-     (inc (.getMonth p))
-     (.getDate p)])))
+ (??check-parse (parse "May 11, 1973" :locale "en-US" :pattern :long-date))
+ ; can put some cruft at the end of a date
+ (??check-parse (parse "May 11, 1973 bar" :locale "en-US" :pattern :long-date))
 
+ ; not exactly sure what :strict? is supposed to do?
+ (??check-parse (parse "May 11, 1973" :locale "en-US" :pattern :long-date :strict? true))
+ (??check-parse (parse "May 11, 1973a" :locale "en-US" :pattern :long-date :strict? true))
 
- (let [p (parse "5/11/73" :locale "en-US" :pattern :long-date)]
-  (is
-   (=
-    [2018 3 24]
-    [(.getFullYear p)
-     (inc (.getMonth p))
-     (.getDate p)]))))
-
+ ; fails to parse! falls back to "now"
+ (??check-parse
+  (parse "5/11/73" :locale "en-US" :pattern :long-date)
+  (js/Date.)))
 
 (deftest ??format-parse
  ; May 12 1973.
