@@ -33,7 +33,8 @@ configuration like "formatter pattern" is set as a property on a local
 `formatter` object.
 
 The documentation for Google Closure's i18n code is almost nonexistant. It is
-neccessary to read the code directly to understand how to use it.
+neccessary to read the code comments and review tests directly to understand how
+to use it.
 
 Natively `goog.i18n` does not expose the ability to work with more than one
 locale at a time. Internally it has several mostly undocumented global
@@ -73,6 +74,13 @@ need in order to work with an end-user's locale in the browser:
 - Extracting the user's preferred locale based on OS/browser/config settings
 - Normalizing locale's format (e.g. `en_US` to `en-US`)
 - Extracting a supported locale from `Accept-Language` HTTP headers
+
+### Comparison with other libraries
+
+Here's a comparison of various i18n libraries available in JavaScript, including
+Google Closure:
+
+https://github.com/rxaviers/javascript-globalization
 
 ## Supported locales
 
