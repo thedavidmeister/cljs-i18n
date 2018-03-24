@@ -8,11 +8,13 @@
 
 Google Closure `goog.i18n` is a wrapper for the Unicode CLDR data `goog.i18n` that provides localisation logic for:
 
-- Datetime/Timezone formatting and parsing
 - Number formatting and parsing
+- Datetime/Timezone formatting and parsing
 - Collation
 - Currency formatting
+- Text message translation
 - Plurals
+- Bidirectional text
 
 Which is amazing for several reasons:
 
@@ -511,3 +513,23 @@ https://github.com/google/closure-library/blob/master/closure/goog/i18n/timezone
 Examples of `timeZoneData` objects:
 
 https://github.com/google/closure-library/blob/master/closure/goog/i18n/timezone_test.js#L29
+
+## Collation
+
+TODO - patches welcome!
+
+## Currency
+
+TODO - patches welcome!
+
+## Text messages
+
+TODO - patches welcome!
+
+## Plurals
+
+TODO - patches welcome!
+
+## BIDI text
+
+TODO - patches welcome!
