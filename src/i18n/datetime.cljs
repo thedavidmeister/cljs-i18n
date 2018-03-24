@@ -66,11 +66,6 @@
    (when tz (timezone tz)))))
 (def format (memoize -format))
 
-; (defn format-cell
-;  [d & {:keys [pattern locale tz]}]
-;  (let [locale (or locale i18n.locale/supported-user-locale)]
-;   (j/cell= (format d :locale locale :pattern pattern :tz tz))))
-
 (defn -parse
  [s & {:keys [locale pattern]}]
  {:pre [(string? s) (string? locale)]
@@ -87,11 +82,6 @@
     d)
    d)))
 (def parse (memoize -parse))
-
-; (defn parse-cell
-;  [s & {:keys [pattern locale]}]
-;  (let [locale (or locale i18n.locale/supported-user-locale)]
-;   (j/cell= (parse s :locale locale :pattern pattern))))
 
 ; TESTS.
 
