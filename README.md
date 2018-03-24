@@ -414,25 +414,25 @@ Takes a `js/Date` or a compatible Date object, e.g. `goog.date.DateTime` and
 returns a formatted string.
 
 ```clojure
-(format (js/Date. 106000000000) :locale "en-US") ; "May 11, 1973"
-(format (js/Date. 106000000000) :locale "en-AU") ; "11 May 1973"
+(format (js/Date. 106000000000) :locale "en-US" :tz 0) ; "May 11, 1973"
+(format (js/Date. 106000000000) :locale "en-AU" :tz 0) ; "11 May 1973"
 
-(format (js/Date. 106000000000) :locale "en-US" :pattern :short-time) ; "8:26 PM"
-(format (js/Date. 106000000000) :locale "en-AU" :pattern :short-time) ; "8:26 pm"
+(format (js/Date. 106000000000) :locale "en-US" :pattern :short-time :tz 0) ; "8:26 PM"
+(format (js/Date. 106000000000) :locale "en-AU" :pattern :short-time :tz 0) ; "8:26 pm"
 
-(format (js/Date. 106000000000) :locale "en-US" :pattern :full-datetime) ; "Friday, May 11, 1973 at 8:26:40 PM UTC"
-(format (js/Date. 106000000000) :locale "en-AU" :pattern :full-datetime) ; "Friday, 11 May 1973 at 8:26:40 pm UTC"
+(format (js/Date. 106000000000) :locale "en-US" :pattern :full-datetime :tz 0) ; "Friday, May 11, 1973 at 8:26:40 PM UTC"
+(format (js/Date. 106000000000) :locale "en-AU" :pattern :full-datetime :tz 0) ; "Friday, 11 May 1973 at 8:26:40 pm UTC"
 ```
 
-`i18n.datetime/format` also takes an optional `:tz` parameter. The value of
+`i18n.datetime/format` takes an optional `:tz` parameter. The value of
 `:tz` will be passed to `i18n.datetime/timezone` before use in the formatter.
-The timezone handling in `goog.i18n.TimeZone` is somewhat counterintuitive so
-read their docs carefully (see below).
+The timezone handling in `goog.i18n.TimeZone` works like `js/Date` methods, in
+that it is an _offset_, i.e. negative minutes (see below).
 
-The default `:tz` is UTC.
+The default `:tz` is `:local`, i.e. `(.getTimezoneOffset (js/Date.))`.
 
 ```clojure
-(format (js/Date. 106000000000) :locale "en-AU" :pattern :full-datetime) ; "Friday, 11 May 1973 at 8:26:40 pm UTC"
+(format (js/Date. 106000000000) :locale "en-AU" :pattern :full-datetime :tz 0) ; "Friday, 11 May 1973 at 8:26:40 pm UTC"
 (format (js/Date. 106000000000) :locale "en-AU" :pattern :full-datetime :tz -600) ; "Saturday, 12 May 1973 at 6:26:40 am UTC+10"
 ```
 
@@ -457,7 +457,11 @@ The `i18n.datetime/timezone` fn is a thin wrapper around Google Closure's own
 i18n timezone handling.
 
 Numeric values are treated as a simple offset in negative minutes, e.g. `UTC+10`
-hours would be `-600` in goog.
+hours would be `-600` in goog. This is compatible with the timezone offset API
+provided by native JS.
+
+To get the current offset in the browser, pass `:local` to
+`i18n.datetime/timezone` or call `(.getTimezoneOffset (js/Date.))`.
 
 Numeric values do not support daylight savings. For DST support a JS object must
 be provided outlining all the details of the timezone.

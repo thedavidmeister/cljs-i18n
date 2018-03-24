@@ -46,9 +46,15 @@
 ; PUBLIC API.
 
 (defn timezone [v]
- (if-not (instance? goog.i18n.TimeZone v)
-  (.createTimeZone goog.i18n.TimeZone v)
-  v))
+ (cond
+  (instance? goog.i18n.TimeZone v)
+  v
+
+  (#{:local} v)
+  (timezone (.getTimezoneOffset (js/Date.)))
+
+  :else
+  (.createTimeZone goog.i18n.TimeZone v)))
 
 (defn -format
  [d & {:keys [locale pattern tz]}]
@@ -56,7 +62,7 @@
   :post [(string? locale)]}
  (let [locale (or locale i18n.data/default-locale)
        pattern (or pattern default-pattern)
-       tz (timezone (or tz 0))]
+       tz (timezone (or tz :local))]
   (i18n.goog/set-locale! locale)
   (.format
    ((formatter)
@@ -99,20 +105,20 @@
    :keywordize-keys true)))
 
 (deftest ??format
- (is (= "May 11, 1973" (format (js/Date. 106000000000) :locale "en-US")))
- (is (= "11 May 1973" (format (js/Date. 106000000000) :locale "en-AU")))
+ (is (= "May 11, 1973" (format (js/Date. 106000000000) :locale "en-US" :tz 0)))
+ (is (= "11 May 1973" (format (js/Date. 106000000000) :locale "en-AU" :tz 0)))
 
- (is (= "8:26 PM" (format (js/Date. 106000000000) :locale "en-US" :pattern :short-time)))
- (is (= "8:26 pm" (format (js/Date. 106000000000) :locale "en-AU" :pattern :short-time)))
+ (is (= "8:26 PM" (format (js/Date. 106000000000) :locale "en-US" :pattern :short-time :tz 0)))
+ (is (= "8:26 pm" (format (js/Date. 106000000000) :locale "en-AU" :pattern :short-time :tz 0)))
 
  (is
   (=
    "Friday, May 11, 1973 at 8:26:40 PM UTC"
-   (format (js/Date. 106000000000) :locale "en-US" :pattern :full-datetime)))
+   (format (js/Date. 106000000000) :locale "en-US" :pattern :full-datetime :tz 0)))
  (is
   (=
    "Friday, 11 May 1973 at 8:26:40 pm UTC"
-   (format (js/Date. 106000000000) :locale "en-AU" :pattern :full-datetime)))
+   (format (js/Date. 106000000000) :locale "en-AU" :pattern :full-datetime :tz 0)))
 
  (is
   (=
