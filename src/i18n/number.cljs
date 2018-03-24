@@ -45,23 +45,21 @@
 (def locale->latin-symbols
  (i18n.goog/locale->symbols-fn :number-format-symbols-latin))
 
-(def symbols-fn (atom locale->symbols))
-
 (i18n.goog/register-locale-cb!
  (fn [locale]
   (set! goog.i18n.NumberFormatSymbols (locale->symbols locale))
   (set! goog.i18n.NumberFormatSymbols_u_nu_latn (locale->latin-symbols locale))))
-  ; (set! goog.i18n.NumberFormatSymbols (@symbols-fn locale))
-  ; (set! goog.i18n.NumberFormatSymbols_u_nu_latn (@symbols-fn locale))
-  ; (prn goog.i18n.NumberFormatSymbols goog.i18n.NumberFormatSymbols_u_nu_latn)))
 
 (defn formatter
  [& {:keys [max-fraction-digits
             min-fraction-digits
             significant-digits
-            trailing-zeros?]}]
+            trailing-zeros?
+            enforce-ascii-digits]}]
  (i18n.goog/formatter
   (fn [pattern]
+   ; setEnforceAsciiDigits must be called before constructing a formatter
+   (goog.i18n.NumberFormat.setEnforceAsciiDigits (boolean enforce-ascii-digits))
    (let [number-format (goog.i18n.NumberFormat. pattern)]
     (when (integer? min-fraction-digits)
      (.setMinimumFractionDigits number-format min-fraction-digits))
@@ -99,15 +97,14 @@
    (nan? n) nan-string
    :else
    (do
-    ; setEnforceAsciiDigits must be called before constructing a formatter
-    (goog.i18n.NumberFormat.setEnforceAsciiDigits (boolean enforce-ascii-digits))
     (i18n.goog/set-locale! locale)
     (.format
      ((formatter
        :min-fraction-digits min-fraction-digits
        :max-fraction-digits max-fraction-digits
        :significant-digits significant-digits
-       :trailing-zeros? trailing-zeros?)
+       :trailing-zeros? trailing-zeros?
+       :enforce-ascii-digits enforce-ascii-digits)
       (or pattern default-pattern))
      n)))))
 (def format (memoize -format))
