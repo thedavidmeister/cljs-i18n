@@ -45,10 +45,14 @@
 (def locale->latin-symbols
  (i18n.goog/locale->symbols-fn :i18n/number-format-symbols-latin))
 
+(def locale->compact-symbols
+ (i18n.goog/locale->symbols-fn :i18n/number-format-symbols-compact))
+
 (i18n.goog/register-locale-cb!
  (fn [locale]
   (set! goog.i18n.NumberFormatSymbols (locale->symbols locale))
-  (set! goog.i18n.NumberFormatSymbols_u_nu_latn (locale->latin-symbols locale))))
+  (set! goog.i18n.NumberFormatSymbols_u_nu_latn (locale->latin-symbols locale))
+  (set! goog.i18n.CompactNumberFormatSymbols (locale->compact-symbols locale))))
 
 (defn formatter
  [& {:keys [max-fraction-digits
