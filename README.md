@@ -415,10 +415,21 @@ Any supported locale code (see above).
 `:pattern`
 
 A CLDR number formatting pattern or one of the preconfigured formats as per
-`i18n.datetime/formats`. Currently supported formats: `:full-date`,
-`:long-date`, `:medium-date`, `:short-date`, `:full-time`, `:long-time`,
-`:medium-time`, `:short-time`, `:full-datetime`, `:long-datetime`,
-`:medium-datetime`, `:short-datetime`.
+`i18n.datetime/formats` and `i18n.datetime/pattern->common-pattern`.
+
+These wrap and normalise two separate sets of patterns in goog:
+
+- `goog.i18n.DateTimeFormat.Format`
+- `goog.i18n.DateTimePatterns`
+
+Currently supported formats:
+
+`:full-date`, `:long-date`, `:medium-date`, `:short-date`, `:full-time`,
+`:long-time`, `:medium-time`, `:short-time`, `:full-datetime`, `:long-datetime`,
+`:medium-datetime`, `:short-datetime`, `:year-full`, `:year-full-with-era`,
+`:year-month-abbr`, `:year-month-full`, `:month-day-abbr`, `:month-day-full`,
+`:month-day-short`, `:month-day-medium`, `:month-day-year-medium`,
+`:weekday-month-day-medium`, `:weekday-month-day-year-medium`, `:day-abbr`.
 
 Default `:pattern` is `:long-date`.
 
