@@ -40,10 +40,10 @@
 (def default-pattern :decimal)
 
 (def locale->symbols
- (i18n.goog/locale->symbols-fn :number-format-symbols))
+ (i18n.goog/locale->symbols-fn :i18n/number-format-symbols))
 
 (def locale->latin-symbols
- (i18n.goog/locale->symbols-fn :number-format-symbols-latin))
+ (i18n.goog/locale->symbols-fn :i18n/number-format-symbols-latin))
 
 (i18n.goog/register-locale-cb!
  (fn [locale]
@@ -113,7 +113,7 @@
  [s & {:keys [locale pattern]}]
  {:pre [(string? s) (or (nil? locale) (string? locale))]
   :post [(number? %)]}
- (let [locale (or locale (-> i18n.data/locales :default :code))]
+ (let [locale (or locale i18n.data/default-locale)]
   (i18n.goog/set-locale! locale)
   (.parse
    ((parser)
