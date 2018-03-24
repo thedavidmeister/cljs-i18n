@@ -188,6 +188,7 @@
 
   ; Persian
   "fa" {:number-format-symbols goog.i18n.NumberFormatSymbols_fa
+        :number-format-symbols-latin goog.i18n.NumberFormatSymbols_fa_u_nu_latn
         :date-time-symbols goog.i18n.DateTimeSymbols_fa
         :code "fa"}
 

@@ -42,8 +42,18 @@
 (def locale->symbols
  (i18n.goog/locale->symbols-fn :number-format-symbols))
 
+(def locale->latin-symbols
+ (i18n.goog/locale->symbols-fn :number-format-symbols-latin))
+
+(def symbols-fn (atom locale->symbols))
+
 (i18n.goog/register-locale-cb!
- #(set! goog.i18n.NumberFormatSymbols (locale->symbols %)))
+ (fn [locale]
+  (set! goog.i18n.NumberFormatSymbols (locale->symbols locale))
+  (set! goog.i18n.NumberFormatSymbols_u_nu_latn (locale->latin-symbols locale))))
+  ; (set! goog.i18n.NumberFormatSymbols (@symbols-fn locale))
+  ; (set! goog.i18n.NumberFormatSymbols_u_nu_latn (@symbols-fn locale))
+  ; (prn goog.i18n.NumberFormatSymbols goog.i18n.NumberFormatSymbols_u_nu_latn)))
 
 (defn formatter
  [& {:keys [max-fraction-digits
@@ -75,6 +85,7 @@
               max-fraction-digits
               significant-digits
               trailing-zeros?
+              enforce-ascii-digits
               nil-string
               nan-string]}]
  {:pre [(or (nil? n) (number? n))
@@ -88,6 +99,8 @@
    (nan? n) nan-string
    :else
    (do
+    ; setEnforceAsciiDigits must be called before constructing a formatter
+    (goog.i18n.NumberFormat.setEnforceAsciiDigits (boolean enforce-ascii-digits))
     (i18n.goog/set-locale! locale)
     (.format
      ((formatter
@@ -112,6 +125,10 @@
 (def parse (memoize -parse))
 
 ; TESTS.
+
+(deftest ??format--ascii-digits
+ (is (= "۱٬۰۰۰٬۰۰۰" (format 1000000 :locale "fa")))
+ (is (= "1,000,000" (format 1000000 :locale "fa" :enforce-ascii-digits true))))
 
 (deftest ??format--fraction-digits
  (let [n (/ 10 3)]
