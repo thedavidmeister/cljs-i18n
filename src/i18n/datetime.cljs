@@ -168,7 +168,6 @@
 
 (deftest ??parse
  (let [p (parse "May 12, 1973" :locale "en-US" :pattern :long-date)]
-  (prn p)
   (is
    (=
     [1973 5 12]
