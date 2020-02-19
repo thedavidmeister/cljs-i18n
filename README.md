@@ -554,7 +554,15 @@ TODO - patches welcome!
 
 ## Plurals
 
-TODO - patches welcome!
+Finds a proper plural form for a given number.
+
+Both `plurals` AND `locale` are required.
+
+```clojure
+(def plurals-en {i18n.plural/one "book" i18n.plural/other "books"})
+(plural 0 :locale "en" :plurals plurals-en) ; "books"
+(plural 1 :locale "en" :plurals plurals-en) ; "book"
+```
 
 ## BIDI text
 
