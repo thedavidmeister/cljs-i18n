@@ -4,6 +4,17 @@
 #
 version: 2
 jobs:
+  deploy-snapshot:
+   docker:
+    - image: nixorg/nix:circleci
+
+   working_directory: ~/repo
+
+   steps:
+    - checkout
+
+    - run: nix-shell --run 'boot build-jar push-snapshot'
+
   build:
     docker:
       - image: circleci/clojure:boot-browsers
