@@ -55,7 +55,7 @@ workflows:
  deploy:
   jobs:
    - snapshot-push:
-    filters:
-     branches:
-      only:
-       - master
+      filters:
+       branches:
+        only:
+         - master
