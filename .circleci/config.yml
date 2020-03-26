@@ -2,9 +2,9 @@
 #
 # Check https://circleci.com/docs/2.0/language-clojure/ for more details
 #
-version: 2
+version: 2.1
 jobs:
-  build:
+  snapshot-push:
    docker:
     - image: nixorg/nix:circleci
 
@@ -15,34 +15,47 @@ jobs:
 
     - run: nix-shell --run 'boot build-jar push-snapshot'
 
-  # build:
-  #   docker:
-  #     - image: circleci/clojure:boot-browsers
-  #
-  #   working_directory: ~/repo
-  #
-  #   environment:
-  #     # Customize the JVM maximum heap limit
-  #     BOOT_JVM_OPTIONS: -Xmx3g -client -XX:+TieredCompilation -XX:TieredStopAtLevel=1 -XX:+UseConcMarkSweepGC -XX:+CMSClassUnloadingEnabled -Xverify:none
-  #
-  #   steps:
-  #     - checkout
-  #
-  #     # Download and cache dependencies
-  #     - restore_cache:
-  #         keys:
-  #         - v1-dependencies-{{ checksum "build.boot" }}
-  #         # fallback to using the latest cache if no exact match is found
-  #         - v1-dependencies-
-  #
-  #     # CLJS tests should not need the db and are more likely to fail, so we run
-  #     # them first.
-  #     - run: boot tests-cljs
-  #
-  #     - save_cache:
-  #         paths:
-  #           - "~/bin"
-  #           - "~/.m2"
-  #           - "~/.boot/cache/bin"
-  #           - "~/.boot/cache/lib"
-  #         key: v1-dependencies-{{ checksum "build.boot" }}
+  build:
+    docker:
+      - image: circleci/clojure:boot-browsers
+
+    working_directory: ~/repo
+
+    environment:
+      # Customize the JVM maximum heap limit
+      BOOT_JVM_OPTIONS: -Xmx3g -client -XX:+TieredCompilation -XX:TieredStopAtLevel=1 -XX:+UseConcMarkSweepGC -XX:+CMSClassUnloadingEnabled -Xverify:none
+
+    steps:
+      - checkout
+
+      # Download and cache dependencies
+      - restore_cache:
+          keys:
+          - v1-dependencies-{{ checksum "build.boot" }}
+          # fallback to using the latest cache if no exact match is found
+          - v1-dependencies-
+
+      # CLJS tests should not need the db and are more likely to fail, so we run
+      # them first.
+      - run: boot tests-cljs
+
+      - save_cache:
+          paths:
+            - "~/bin"
+            - "~/.m2"
+            - "~/.boot/cache/bin"
+            - "~/.boot/cache/lib"
+          key: v1-dependencies-{{ checksum "build.boot" }}
+
+workflows:
+ version: 2.1
+ tests:
+  jobs:
+   - build
+ deploy:
+  jobs:
+   - snapshot-push:
+    filters:
+     branches:
+      only:
+       - master
