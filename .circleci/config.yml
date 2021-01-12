@@ -24,6 +24,7 @@ jobs:
     environment:
       # Customize the JVM maximum heap limit
       BOOT_JVM_OPTIONS: -Xmx3g -client -XX:+TieredCompilation -XX:TieredStopAtLevel=1 -XX:+UseConcMarkSweepGC -XX:+CMSClassUnloadingEnabled -Xverify:none
+      BOOT_AS_ROOT: yes
 
     steps:
       - checkout
