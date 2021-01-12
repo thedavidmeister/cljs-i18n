@@ -14,6 +14,7 @@
    pkgs.phantomjs2
    pkgs.gnupg1
    pkgs.nodejs
+   pkgs.pinentry
    # pkgs.google-chrome
   ];
  };
