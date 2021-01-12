@@ -64,7 +64,8 @@
    identity)
   (test-cljs
    :exit? (not watch?)
-   ; :js-env :chrome
+   :js-env :chrome-headless
+   ; :js-env :phantom
    :optimizations (or (keyword optimizations) :none)
    :cljs-opts (test-cljs-compiler-options)
    :namespaces [#".*"])))
