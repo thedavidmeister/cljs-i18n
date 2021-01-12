@@ -10,6 +10,9 @@ jobs:
 
    working_directory: ~/repo
 
+   environment:
+    BOOT_AS_ROOT: yes
+
    steps:
     - checkout
 
