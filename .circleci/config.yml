@@ -17,13 +17,14 @@ jobs:
 
   build:
     docker:
-      - image: circleci/clojure:boot-browsers
+      - image: nixorg/nix:circleci
 
     working_directory: ~/repo
 
     environment:
       # Customize the JVM maximum heap limit
       BOOT_JVM_OPTIONS: -Xmx3g -client -XX:+TieredCompilation -XX:TieredStopAtLevel=1 -XX:+UseConcMarkSweepGC -XX:+CMSClassUnloadingEnabled -Xverify:none
+      BOOT_AS_ROOT: yes
 
     steps:
       - checkout
@@ -37,7 +38,7 @@ jobs:
 
       # CLJS tests should not need the db and are more likely to fail, so we run
       # them first.
-      - run: boot tests-cljs
+      - run: nix-shell --run 'boot tests-cljs'
 
       - save_cache:
           paths:

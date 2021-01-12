@@ -1,0 +1,25 @@
+{
+  "name": "cljs-i18n",
+  "version": "0.0.1",
+  "description": "## Install",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/thedavidmeister/cljs-i18n.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/thedavidmeister/cljs-i18n/issues"
+  },
+  "homepage": "https://github.com/thedavidmeister/cljs-i18n#readme",
+  "dependencies": {},
+  "devDependencies": {
+    "karma": "^5.2.3",
+    "karma-chrome-launcher": "^3.1.0",
+    "karma-cljs-test": "^0.1.0"
+  }
+}

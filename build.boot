@@ -7,8 +7,8 @@
  :source-paths #{"src"}
  :dependencies
  '[; scaffolding...
-   [org.clojure/clojure "1.10.0-alpha4"]
-   [org.clojure/clojurescript "1.9.946"]
+   [org.clojure/clojure "1.10.2-rc2"]
+   [org.clojure/clojurescript "1.10.773"]
    [adzerk/boot-cljs "2.1.4"]
    [crisptrutski/boot-cljs-test "0.3.5-SNAPSHOT"]
    [adzerk/bootlaces "0.1.13"]
@@ -17,7 +17,7 @@
    [doo "0.1.8"]
 
    ; everything else...
-   [com.taoensso/timbre "4.10.0" :scope "test"]])
+   [com.taoensso/timbre "5.1.0" :scope "test"]])
 
 (task-options!
  pom {:project project
@@ -64,7 +64,8 @@
    identity)
   (test-cljs
    :exit? (not watch?)
-   ; :js-env :chrome
+   ; :js-env :chrome-headless
+   :js-env :phantom
    :optimizations (or (keyword optimizations) :none)
    :cljs-opts (test-cljs-compiler-options)
    :namespaces [#".*"])))

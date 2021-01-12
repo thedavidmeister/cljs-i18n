@@ -1,4 +1,4 @@
-(ns i18n.goog
+(ns i18n.wrap-goog
  (:require
   i18n.data
   i18n.locale
