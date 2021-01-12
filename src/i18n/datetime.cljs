@@ -1,6 +1,6 @@
 (ns i18n.datetime
  (:require
-  i18n.goog
+  i18n.wrap-goog
   i18n.locale
   i18n.data
   goog.object
@@ -47,19 +47,19 @@
   pattern))
 
 (def locale->symbols
- (i18n.goog/locale->symbols-fn :i18n/date-time-symbols))
+ (i18n.wrap-goog/locale->symbols-fn :i18n/date-time-symbols))
 
 (def locale->patterns
- (i18n.goog/locale->symbols-fn :i18n/date-time-patterns))
+ (i18n.wrap-goog/locale->symbols-fn :i18n/date-time-patterns))
 
-(i18n.goog/register-locale-cb!
+(i18n.wrap-goog/register-locale-cb!
  (fn [locale]
   (set! goog.i18n.DateTimeSymbols (locale->symbols locale))
   (set! goog.i18n.DateTimePatterns (locale->patterns locale))))
 
 (defn formatter
  [& {:keys [ascii?]}]
- (i18n.goog/formatter
+ (i18n.wrap-goog/formatter
   (fn [pattern]
    ; setEnforceAsciiDigits must be called before constructing a formatter
    (goog.i18n.DateTimeFormat.setEnforceAsciiDigits (boolean ascii?))
@@ -68,7 +68,7 @@
 
 (defn parser
  [& {:keys [ascii?]}]
- (i18n.goog/formatter
+ (i18n.wrap-goog/formatter
   (fn [pattern]
    ; setEnforceAsciiDigits must be called before constructing a formatter
    (goog.i18n.DateTimeFormat.setEnforceAsciiDigits (boolean ascii?))
@@ -94,7 +94,7 @@
               tz
               ascii?]}]
  {:post [(string? %)]}
- (i18n.goog/set-locale! (or locale i18n.data/default-locale))
+ (i18n.wrap-goog/set-locale! (or locale i18n.data/default-locale))
  (let [pattern (pattern->common-pattern (or pattern default-pattern))
        tz (timezone (or tz :local))]
   (.format
@@ -112,7 +112,7 @@
               ascii?]}]
  {:pre [(string? s)]
   :post [(instance? js/Date %)]}
- (i18n.goog/set-locale! (or locale i18n.data/default-locale))
+ (i18n.wrap-goog/set-locale! (or locale i18n.data/default-locale))
  (let [pattern (pattern->common-pattern pattern)]
   (let [d (js/Date.)
         p ((parser :ascii? ascii?) pattern)
@@ -157,29 +157,29 @@
 (deftest ??common-pattern
  (is (= "11" (format (js/Date. 106000000000) :locale "en-US" :tz 0 :pattern :day-abbr)))
 
- (is (= "الجمعة، ١١ مايو، ١٩٧٣" (format (js/Date. 106000000000) :locale "ar" :tz 0 :pattern :weekday-month-day-year-medium)))
+ (is (= "ven. 11 mai 1973" (format (js/Date. 106000000000) :locale "fr" :tz 0 :pattern :weekday-month-day-year-medium)))
  (is (= "جمعه ۱۱ مهٔ ۱۹۷۳" (format (js/Date. 106000000000) :locale "fa" :tz 0 :pattern :weekday-month-day-year-medium)))
  (is (= "Fri, May 11, 1973" (format (js/Date. 106000000000) :locale "en" :tz 0 :pattern :weekday-month-day-year-medium)))
 
- (??check-parse (parse "الجمعة، ١١ مايو، ١٩٧٣" :locale "ar" :tz 0 :pattern :weekday-month-day-year-medium))
+ (??check-parse (parse "ven. 11 mai 1973" :locale "fr" :tz 0 :pattern :weekday-month-day-year-medium))
  (??check-parse (parse "جمعه ۱۱ مهٔ ۱۹۷۳" :locale "fa" :tz 0 :pattern :weekday-month-day-year-medium))
  (??check-parse (parse "Fri, May 11, 1973" :locale "en" :tz 0 :pattern :weekday-month-day-year-medium)))
 
 (deftest ??ascii-digits
  (is
   (=
-   "الجمعة، 11 مايو، 1973"
+   "ven. 11 mai 1973"
    (format
     (js/Date. 106000000000)
-    :locale "ar"
+    :locale "fr"
     :tz 0
     :pattern :weekday-month-day-year-medium
     :ascii? true)))
 
  (??check-parse
   (parse
-   "الجمعة، 11 مايو، 1973"
-   :locale "ar"
+   "ven. 11 mai 1973"
+   :locale "fr"
    :tz 0
    :pattern :weekday-month-day-year-medium
    :ascii? true)))

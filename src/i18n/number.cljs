@@ -10,7 +10,7 @@
   goog.i18n.NumberFormat
   goog.i18n.NumberFormat.Format
   goog.i18n.NumberFormatSymbols
-  i18n.goog
+  i18n.wrap-goog
   [cljs.test :refer-macros [deftest is are]]
   taoensso.timbre
   i18n.locale
@@ -40,15 +40,15 @@
 (def default-pattern :decimal)
 
 (def locale->symbols
- (i18n.goog/locale->symbols-fn :i18n/number-format-symbols))
+ (i18n.wrap-goog/locale->symbols-fn :i18n/number-format-symbols))
 
 (def locale->latin-symbols
- (i18n.goog/locale->symbols-fn :i18n/number-format-symbols-latin))
+ (i18n.wrap-goog/locale->symbols-fn :i18n/number-format-symbols-latin))
 
 (def locale->compact-symbols
- (i18n.goog/locale->symbols-fn :i18n/number-format-symbols-compact))
+ (i18n.wrap-goog/locale->symbols-fn :i18n/number-format-symbols-compact))
 
-(i18n.goog/register-locale-cb!
+(i18n.wrap-goog/register-locale-cb!
  (fn [locale]
   (set! goog.i18n.NumberFormatSymbols (locale->symbols locale))
   (set! goog.i18n.NumberFormatSymbols_u_nu_latn (locale->latin-symbols locale))
@@ -60,7 +60,7 @@
             significant-digits
             trailing-zeros?
             ascii?]}]
- (i18n.goog/formatter
+ (i18n.wrap-goog/formatter
   (fn [pattern]
    ; setEnforceAsciiDigits must be called before constructing a formatter
    (goog.i18n.NumberFormat.setEnforceAsciiDigits (boolean ascii?))
@@ -104,7 +104,7 @@
 
    :else
    (do
-    (i18n.goog/set-locale! locale)
+    (i18n.wrap-goog/set-locale! locale)
     (.format
      ((formatter
        :min-fraction-digits min-fraction-digits
@@ -123,7 +123,7 @@
  {:pre [(string? s) (or (nil? locale) (string? locale))]
   :post [(number? %)]}
  (let [locale (or locale i18n.data/default-locale)]
-  (i18n.goog/set-locale! locale)
+  (i18n.wrap-goog/set-locale! locale)
   (.parse
    ((parser
      :ascii? ascii?)
