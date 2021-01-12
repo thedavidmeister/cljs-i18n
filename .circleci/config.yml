@@ -17,7 +17,7 @@ jobs:
 
   build:
     docker:
-      - image: circleci/clojure:boot-browsers
+      - image: nixorg/nix:circleci
 
     working_directory: ~/repo
 
@@ -37,7 +37,7 @@ jobs:
 
       # CLJS tests should not need the db and are more likely to fail, so we run
       # them first.
-      - run: boot tests-cljs
+      - run: nix-shell --run 'boot tests-cljs'
 
       - save_cache:
           paths:
