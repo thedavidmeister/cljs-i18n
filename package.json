@@ -18,7 +18,7 @@
   "homepage": "https://github.com/thedavidmeister/cljs-i18n#readme",
   "dependencies": {},
   "devDependencies": {
-    "karma": "^5.2.3",
+    "karma": "^6.3.16",
     "karma-chrome-launcher": "^3.1.0",
     "karma-cljs-test": "^0.1.0"
   }
